@@ -1,0 +1,13 @@
+{
+  "name": "rfut-dor",
+  "version": "1.0.0",
+  "description": "RFUT DOR - Ranked Choice Voting Platform for Discord Community",
+  "scripts": {
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build:client": "cd client && npm run build",
+    "seed": "cd server && npm run seed",
+    "test:api": "cd server && npm run test:api",
+    "test:e2e": "cd server && npm run test:e2e"
+  }
+}

@@ -1,0 +1,102 @@
+[
+  {
+    "discordUsername": "NexusPilot#1001",
+    "category": "Regular Member",
+    "plaintextCode": "7EH7-NF5B",
+    "voterId": "6aec7731c801a1420c1e8c9a",
+    "hasVoted": true
+  },
+  {
+    "discordUsername": "PixelKnight#1002",
+    "category": "Regular Member",
+    "plaintextCode": "HB8V-878F",
+    "voterId": "6aec7731c801a1420c1e8c9c",
+    "hasVoted": true
+  },
+  {
+    "discordUsername": "QuantumEcho#1003",
+    "category": "Regular Member",
+    "plaintextCode": "AA78-TSZD",
+    "voterId": "6aec7731c801a1420c1e8c9e",
+    "hasVoted": true
+  },
+  {
+    "discordUsername": "NeonSpecter#1004",
+    "category": "Regular Member",
+    "plaintextCode": "AUND-H3XN",
+    "voterId": "6aec7731c801a1420c1e8ca0",
+    "hasVoted": true
+  },
+  {
+    "discordUsername": "CyberPanda#1005",
+    "category": "Regular Member",
+    "plaintextCode": "UKUQ-BLQH",
+    "voterId": "6aec7731c801a1420c1e8ca2"
+  },
+  {
+    "discordUsername": "DarkMatter#1006",
+    "category": "Regular Member",
+    "plaintextCode": "SZR6-ZEKU",
+    "voterId": "6aec7731c801a1420c1e8ca4"
+  },
+  {
+    "discordUsername": "SilverBullet#1007",
+    "category": "Regular Member",
+    "plaintextCode": "8RTS-BZZW",
+    "voterId": "6aec7731c801a1420c1e8ca6"
+  },
+  {
+    "discordUsername": "CosmicVoyager#1008",
+    "category": "Regular Member",
+    "plaintextCode": "EU57-AJDH",
+    "voterId": "6aec7731c801a1420c1e8ca8"
+  },
+  {
+    "discordUsername": "FrostBite#1009",
+    "category": "Regular Member",
+    "plaintextCode": "D5EX-Q82Z",
+    "voterId": "6aec7731c801a1420c1e8caa"
+  },
+  {
+    "discordUsername": "IronShield#1010",
+    "category": "Regular Member",
+    "plaintextCode": "Q428-7T6E",
+    "voterId": "6aec7731c801a1420c1e8cac"
+  },
+  {
+    "discordUsername": "Mod_Helix#2001",
+    "category": "Staff",
+    "plaintextCode": "5BM5-BCVQ",
+    "voterId": "6aec7731c801a1420c1e8cae"
+  },
+  {
+    "discordUsername": "Admin_Kestrel#2002",
+    "category": "Staff",
+    "plaintextCode": "7BYC-66ES",
+    "voterId": "6aec7731c801a1420c1e8cb0"
+  },
+  {
+    "discordUsername": "Judge_Vanguard#2003",
+    "category": "Staff",
+    "plaintextCode": "ZVYW-8L9J",
+    "voterId": "6aec7731c801a1420c1e8cb2"
+  },
+  {
+    "discordUsername": "EsportsAnalyst#3001",
+    "category": "Journo",
+    "plaintextCode": "Q33A-XHPB",
+    "voterId": "6aec7731c801a1420c1e8cb4"
+  },
+  {
+    "discordUsername": "DOR_Chronicle#3002",
+    "category": "Journo",
+    "plaintextCode": "MPUU-MSET",
+    "voterId": "6aec7731c801a1420c1e8cb6"
+  },
+  {
+    "discordUsername": "MetaReporter#3003",
+    "category": "Journo",
+    "plaintextCode": "JZ3S-D8MS",
+    "voterId": "6aec7731c801a1420c1e8cb8"
+  }
+]
