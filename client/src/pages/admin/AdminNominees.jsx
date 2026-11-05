@@ -8,7 +8,12 @@ import {
   Trash2,
   Power,
   X,
-  AlertCircle
+  AlertCircle,
+  AlertTriangle,
+  Users,
+  CheckCircle2,
+  XCircle,
+  Image as ImageIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -17,7 +22,7 @@ export const AdminNominees = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  // Modal
+  // Add / Edit Modal
   const [showModal, setShowModal] = useState(false);
   const [editingNominee, setEditingNominee] = useState(null);
   const [formData, setFormData] = useState({
@@ -29,15 +34,20 @@ export const AdminNominees = () => {
   });
   const [saving, setSaving] = useState(false);
 
+  // Delete confirmations
+  const [nomineeToDelete, setNomineeToDelete] = useState(null);
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   const fetchNominees = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/nominees');
+      const res = await api.get('/nominees/admin');
       if (res.data?.success) {
         setNominees(res.data.data);
       }
     } catch (err) {
-      toast.error('Failed to load nominees.');
+      toast.error('Failed to load nominees list.');
     } finally {
       setLoading(false);
     }
@@ -62,11 +72,11 @@ export const AdminNominees = () => {
   const openEditModal = (nominee) => {
     setEditingNominee(nominee);
     setFormData({
-      displayName: nominee.displayName,
-      discordUsername: nominee.discordUsername,
-      imageUrl: nominee.imageUrl,
+      displayName: nominee.displayName || '',
+      discordUsername: nominee.discordUsername || '',
+      imageUrl: nominee.imageUrl || '',
       description: nominee.description || '',
-      isActive: nominee.isActive
+      isActive: nominee.isActive !== false
     });
     setShowModal(true);
   };
@@ -84,15 +94,19 @@ export const AdminNominees = () => {
         const res = await api.put(`/nominees/${editingNominee._id}`, formData);
         if (res.data?.success) {
           toast.success('Nominee updated successfully.');
-          fetchNominees();
+          setNominees((prev) =>
+            prev.map((n) => (n._id === editingNominee._id ? res.data.data : n))
+          );
           setShowModal(false);
+          fetchNominees();
         }
       } else {
         const res = await api.post('/nominees', formData);
         if (res.data?.success) {
           toast.success('Nominee added successfully.');
-          fetchNominees();
+          setNominees((prev) => [res.data.data, ...prev]);
           setShowModal(false);
+          fetchNominees();
         }
       }
     } catch (err) {
@@ -116,27 +130,50 @@ export const AdminNominees = () => {
     }
   };
 
-  const handleDelete = async (nominee) => {
-    if (!window.confirm(`Are you sure you want to delete "${nominee.displayName}"?`)) return;
-
+  const handleDeleteNominee = async () => {
+    if (!nomineeToDelete) return;
+    setDeleting(true);
     try {
-      const res = await api.delete(`/nominees/${nominee._id}`);
+      const res = await api.delete(`/nominees/${nomineeToDelete._id}`);
       if (res.data?.success) {
         toast.success(res.data.message);
-        setNominees((prev) => prev.filter((n) => n._id !== nominee._id));
+        setNominees((prev) => prev.filter((n) => n._id !== nomineeToDelete._id));
+        setNomineeToDelete(null);
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to delete nominee.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteAllNominees = async () => {
+    setDeleting(true);
+    try {
+      const res = await api.delete('/nominees/all');
+      if (res.data?.success) {
+        toast.success(res.data.message || 'All nominees have been cleared.');
+        setNominees([]);
+        setShowDeleteAllModal(false);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete all nominees.');
+    } finally {
+      setDeleting(false);
     }
   };
 
   const filtered = nominees.filter((n) => {
     const term = search.toLowerCase().trim();
     return (
-      n.displayName.toLowerCase().includes(term) ||
-      n.discordUsername.toLowerCase().includes(term)
+      (n.displayName || '').toLowerCase().includes(term) ||
+      (n.discordUsername || '').toLowerCase().includes(term)
     );
   });
+
+  const totalCount = nominees.length;
+  const activeCount = nominees.filter((n) => n.isActive).length;
+  const inactiveCount = totalCount - activeCount;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -150,63 +187,122 @@ export const AdminNominees = () => {
             Nominee Roster
           </h1>
           <p className="text-typography-secondary text-sm font-sans mt-0.5">
-            Manage official DOR award nominees, profile imagery, and ballot eligibility.
+            Manage official r/FUT d'Or award nominees, profile imagery, and ballot eligibility.
           </p>
         </div>
 
-        <button
-          onClick={openAddModal}
-          className="px-4 py-2 rounded-none bg-gold hover:bg-gold text-[#0B0A08] font-display font-medium text-xs uppercase tracking-wider transition cursor-pointer self-start sm:self-auto flex items-center gap-1.5 shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Nominee</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {nominees.length > 0 && (
+            <button
+              onClick={() => setShowDeleteAllModal(true)}
+              className="px-3.5 py-2 rounded-none border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-display font-medium text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete All Nominees</span>
+            </button>
+          )}
+
+          <button
+            onClick={openAddModal}
+            className="px-4 py-2 rounded-none bg-gold hover:bg-gold-light text-[#0B0A08] font-display font-medium text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New Nominee</span>
+          </button>
+        </div>
       </div>
 
-      {/* Search Input */}
-      <div className="p-4 rounded-none bg-surface-card border border-surface-border">
-        <div className="relative max-w-md">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-typography-muted">
-            <Search className="w-4 h-4" />
+      {/* Overview Stat Badges & Search */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="p-4 rounded-none bg-surface-card border border-surface-border flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-sans uppercase tracking-widest text-typography-muted">Total Shortlist</p>
+            <p className="font-display text-2xl font-bold text-typography-primary mt-0.5">{totalCount}</p>
           </div>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search nominees by name or Discord handle..."
-            className="w-full pl-9 pr-3 py-2 rounded-none bg-background border border-surface-border text-sm font-sans text-typography-primary placeholder-typography-muted focus:outline-none focus:border-gold transition"
-          />
+          <Award className="w-6 h-6 text-gold/60" />
+        </div>
+
+        <div className="p-4 rounded-none bg-surface-card border border-surface-border flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-sans uppercase tracking-widest text-typography-muted">Active in Ballot</p>
+            <p className="font-display text-2xl font-bold text-emerald-400 mt-0.5">{activeCount}</p>
+          </div>
+          <CheckCircle2 className="w-6 h-6 text-emerald-400/60" />
+        </div>
+
+        <div className="p-4 rounded-none bg-surface-card border border-surface-border flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-sans uppercase tracking-widest text-typography-muted">Inactive / Benched</p>
+            <p className="font-display text-2xl font-bold text-typography-secondary mt-0.5">{inactiveCount}</p>
+          </div>
+          <XCircle className="w-6 h-6 text-typography-muted/60" />
+        </div>
+
+        <div className="p-3 rounded-none bg-surface-card border border-surface-border flex items-center">
+          <div className="relative w-full">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-typography-muted">
+              <Search className="w-4 h-4" />
+            </div>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Filter by name or Discord..."
+              className="w-full pl-9 pr-3 py-2 rounded-none bg-background border border-surface-border text-xs font-sans text-typography-primary placeholder-typography-muted focus:outline-none focus:border-gold transition"
+            />
+          </div>
         </div>
       </div>
 
       {/* Grid of Nominees */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {loading ? (
-          <div className="col-span-3 py-16 text-center text-typography-muted font-sans text-xs">
-            Loading candidate roster...
+          <div className="col-span-3 py-20 text-center text-typography-muted font-sans text-xs flex flex-col items-center justify-center gap-2">
+            <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+            <span>Loading candidate shortlist from database...</span>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="col-span-3 py-16 text-center text-typography-muted font-sans text-xs">
-            No candidates found matching your query.
+          <div className="col-span-3 py-20 text-center text-typography-muted font-sans text-xs bg-surface-card/40 border border-surface-border/60 p-8 flex flex-col items-center justify-center gap-3">
+            <Award className="w-10 h-10 text-gold/30" />
+            <p className="text-sm font-medium text-typography-secondary">
+              {search ? 'No nominees match your search.' : 'No candidates registered in database.'}
+            </p>
+            <p className="text-xs text-typography-muted max-w-sm">
+              {search
+                ? 'Try searching with a different keyword or clear your filter.'
+                : 'Click "Add New Nominee" above to create candidate profiles for the ballot.'}
+            </p>
+            {!search && (
+              <button
+                onClick={openAddModal}
+                className="mt-2 px-4 py-2 bg-gold hover:bg-gold-light text-[#0B0A08] font-display font-medium text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add First Nominee</span>
+              </button>
+            )}
           </div>
         ) : (
           filtered.map((nominee) => (
             <div
               key={nominee._id}
-              className={`p-5 rounded-none border transition-colors bg-surface-card flex flex-col justify-between ${
-                nominee.isActive ? 'border-surface-border' : 'border-surface-border/60 opacity-60'
+              className={`p-5 rounded-none border transition-all duration-200 bg-surface-card flex flex-col justify-between hover:border-gold/40 ${
+                nominee.isActive ? 'border-surface-border' : 'border-surface-border/50 opacity-60'
               }`}
             >
               <div>
                 <div className="flex items-start gap-4">
-                  <img
-                    src={nominee.imageUrl}
-                    alt={nominee.displayName}
-                    className="w-16 h-16 rounded-none object-cover border border-surface-border flex-shrink-0"
-                    onError={(e) => {
-                      e.target.src = 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=400&auto=format&fit=crop&q=80';
-                    }}
-                  />
+                  <div className="relative w-16 h-16 flex-shrink-0 bg-background border border-surface-border overflow-hidden">
+                    <img
+                      src={nominee.imageUrl}
+                      alt={nominee.displayName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src =
+                          'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=400&auto=format&fit=crop&q=80';
+                      }}
+                    />
+                  </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
@@ -214,7 +310,7 @@ export const AdminNominees = () => {
                         {nominee.displayName}
                       </h3>
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-sans font-medium uppercase tracking-wider border ${
+                        className={`px-2 py-0.5 rounded-none text-[9px] font-sans font-medium uppercase tracking-wider border ${
                           nominee.isActive
                             ? 'bg-gold/10 text-gold border-gold/30'
                             : 'bg-surface-muted text-typography-muted border-surface-border'
@@ -223,7 +319,9 @@ export const AdminNominees = () => {
                         {nominee.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </div>
-                    <p className="text-xs text-typography-secondary font-mono truncate mt-0.5">{nominee.discordUsername}</p>
+                    <p className="text-xs text-typography-secondary font-mono truncate mt-0.5">
+                      {nominee.discordUsername}
+                    </p>
                     <p className="text-xs text-typography-secondary/80 mt-2 line-clamp-2 leading-relaxed font-sans">
                       {nominee.description || 'No description provided.'}
                     </p>
@@ -235,7 +333,7 @@ export const AdminNominees = () => {
               <div className="mt-5 pt-3.5 border-t border-surface-border flex items-center justify-between text-xs font-sans">
                 <button
                   onClick={() => handleToggleActive(nominee)}
-                  className={`px-2.5 py-1 rounded-lg border flex items-center gap-1 transition ${
+                  className={`px-2.5 py-1 border flex items-center gap-1.5 transition text-[11px] uppercase tracking-wider font-medium ${
                     nominee.isActive
                       ? 'text-typography-secondary hover:text-typography-primary border-surface-border hover:border-gold/40'
                       : 'text-gold border-gold/30 hover:bg-gold/10'
@@ -249,15 +347,15 @@ export const AdminNominees = () => {
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => openEditModal(nominee)}
-                    className="p-1.5 rounded-lg border border-surface-border hover:bg-surface text-typography-secondary hover:text-typography-primary transition"
+                    className="p-1.5 border border-surface-border hover:bg-surface-border/30 text-typography-secondary hover:text-typography-primary transition"
                     title="Edit Details"
                   >
                     <Edit className="w-3.5 h-3.5" />
                   </button>
 
                   <button
-                    onClick={() => handleDelete(nominee)}
-                    className="p-1.5 rounded-lg border border-surface-border hover:bg-surface text-typography-muted hover:text-rose-400 transition"
+                    onClick={() => setNomineeToDelete(nominee)}
+                    className="p-1.5 border border-surface-border hover:bg-rose-500/10 text-typography-muted hover:text-rose-400 hover:border-rose-500/30 transition"
                     title="Delete Nominee"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -272,28 +370,33 @@ export const AdminNominees = () => {
       {/* CREATE / EDIT MODAL */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-surface-card border border-surface-border rounded-none p-6 border border-surface-border relative space-y-4 font-sans">
+          <div className="max-w-md w-full bg-surface-card border border-surface-border rounded-none p-6 relative space-y-4 font-sans shadow-2xl">
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-typography-muted hover:text-typography-primary"
+              className="absolute top-4 right-4 text-typography-muted hover:text-typography-primary transition"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="font-display font-semibold text-xl uppercase tracking-wide text-typography-primary">
-              {editingNominee ? 'Edit Candidate Details' : 'Add Shortlist Nominee'}
-            </h3>
+            <div>
+              <span className="text-[10px] font-sans font-semibold uppercase tracking-widest text-gold block mb-0.5">
+                {editingNominee ? 'Edit Candidate' : 'New Shortlist Entry'}
+              </span>
+              <h3 className="font-display font-semibold text-xl uppercase tracking-wide text-typography-primary">
+                {editingNominee ? 'Update Candidate Profile' : 'Add Candidate Nominee'}
+              </h3>
+            </div>
 
             <form onSubmit={handleSave} className="space-y-4 pt-1">
               <div>
                 <label className="block text-xs font-medium uppercase tracking-wider text-typography-secondary mb-1">
-                  Display / Candidate Name
+                  Display / Candidate Name <span className="text-gold">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.displayName}
                   onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                  placeholder="e.g. ViperX"
+                  placeholder="e.g. Kylian Mbappe"
                   className="w-full px-3 py-2.5 rounded-none bg-background border border-surface-border text-sm text-typography-primary focus:outline-none focus:border-gold"
                   required
                 />
@@ -301,13 +404,13 @@ export const AdminNominees = () => {
 
               <div>
                 <label className="block text-xs font-medium uppercase tracking-wider text-typography-secondary mb-1">
-                  Discord Username
+                  Discord Username <span className="text-gold">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.discordUsername}
                   onChange={(e) => setFormData({ ...formData, discordUsername: e.target.value })}
-                  placeholder="e.g. ViperX#1337"
+                  placeholder="e.g. mbappe_9"
                   className="w-full px-3 py-2.5 rounded-none bg-background border border-surface-border text-sm text-typography-primary focus:outline-none focus:border-gold"
                   required
                 />
@@ -315,16 +418,28 @@ export const AdminNominees = () => {
 
               <div>
                 <label className="block text-xs font-medium uppercase tracking-wider text-typography-secondary mb-1">
-                  Profile Photo URL
+                  Profile Photo URL <span className="text-gold">*</span>
                 </label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full px-3 py-2.5 rounded-none bg-background border border-surface-border text-sm text-typography-primary focus:outline-none focus:border-gold"
-                  required
-                />
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="url"
+                    value={formData.imageUrl}
+                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                    placeholder="https://..."
+                    className="flex-1 px-3 py-2.5 rounded-none bg-background border border-surface-border text-xs text-typography-primary focus:outline-none focus:border-gold"
+                    required
+                  />
+                  {formData.imageUrl && (
+                    <img
+                      src={formData.imageUrl}
+                      alt="Preview"
+                      className="w-10 h-10 object-cover border border-surface-border flex-shrink-0"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  )}
+                </div>
               </div>
 
               <div>
@@ -340,36 +455,126 @@ export const AdminNominees = () => {
                 ></textarea>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 pt-1">
                 <input
                   type="checkbox"
                   id="isActive"
                   checked={formData.isActive}
                   onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="rounded bg-background border-surface-border text-gold focus:ring-0"
+                  className="rounded bg-background border-surface-border text-gold focus:ring-0 cursor-pointer"
                 />
-                <label htmlFor="isActive" className="text-xs text-typography-secondary">
-                  Active in ballot candidate pool
+                <label htmlFor="isActive" className="text-xs text-typography-secondary cursor-pointer select-none">
+                  Active on voting ballot (Eligible for voter selection)
                 </label>
               </div>
 
-              <div className="pt-2 flex justify-end gap-2">
+              <div className="pt-3 border-t border-surface-border flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 rounded-none text-xs text-typography-secondary hover:text-typography-primary"
+                  className="px-4 py-2 rounded-none text-xs text-typography-secondary hover:text-typography-primary transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2.5 rounded-none bg-gold hover:bg-gold text-[#0B0A08] font-display font-medium text-xs uppercase tracking-wider shadow-sm"
+                  className="px-5 py-2.5 rounded-none bg-gold hover:bg-gold-light text-[#0B0A08] font-display font-medium text-xs uppercase tracking-wider shadow-sm transition disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : editingNominee ? 'Update Nominee' : 'Save Nominee'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE SINGLE NOMINEE CONFIRMATION MODAL */}
+      {nomineeToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-surface-card border border-rose-500/30 p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 bg-rose-500/10 border border-rose-500/30 text-rose-400">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-display font-semibold text-lg text-typography-primary uppercase">
+                  Delete Nominee?
+                </h3>
+                <p className="text-xs text-typography-secondary mt-1">
+                  Are you sure you want to delete{' '}
+                  <span className="font-semibold text-typography-primary font-mono">
+                    {nomineeToDelete.displayName}
+                  </span>{' '}
+                  ({nomineeToDelete.discordUsername})?
+                </p>
+                <p className="text-[11px] text-rose-400/80 mt-2">
+                  Notice: Nominees that have already received votes in submitted ballots cannot be deleted. If votes have been cast, deactivate them instead.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-surface-border">
+              <button
+                type="button"
+                onClick={() => setNomineeToDelete(null)}
+                className="px-4 py-2 text-xs text-typography-secondary hover:text-typography-primary"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteNominee}
+                disabled={deleting}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-display font-medium text-xs uppercase tracking-wider transition disabled:opacity-50"
+              >
+                {deleting ? 'Deleting...' : 'Confirm Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE ALL NOMINEES CONFIRMATION MODAL */}
+      {showDeleteAllModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-surface-card border border-rose-500/40 p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 bg-rose-500/10 border border-rose-500/30 text-rose-400">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-display font-semibold text-lg text-typography-primary uppercase">
+                  Purge All Nominees?
+                </h3>
+                <p className="text-xs text-typography-secondary mt-1">
+                  This will permanently delete <span className="font-semibold text-rose-400">ALL {nominees.length} nominees</span> from the candidate database.
+                </p>
+                <p className="text-[11px] text-rose-400/80 mt-2 font-mono">
+                  This action is irreversible. The ballot shortlist will be completely emptied.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-surface-border">
+              <button
+                type="button"
+                onClick={() => setShowDeleteAllModal(false)}
+                className="px-4 py-2 text-xs text-typography-secondary hover:text-typography-primary"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAllNominees}
+                disabled={deleting}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-display font-medium text-xs uppercase tracking-wider transition disabled:opacity-50"
+              >
+                {deleting ? 'Purging All...' : 'Purge All Nominees'}
+              </button>
+            </div>
           </div>
         </div>
       )}

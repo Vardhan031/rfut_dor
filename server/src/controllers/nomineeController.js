@@ -1,9 +1,30 @@
 import * as nomineeService from '../services/nomineeService.js';
+import { verifyToken } from '../utils/jwt.js';
 
 export const getNominees = async (req, res, next) => {
   try {
-    const isAdmin = Boolean(req.admin);
+    let isAdmin = Boolean(req.admin);
+    const authHeader = req.headers.authorization;
+    if (!isAdmin && authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const decoded = verifyToken(authHeader.split(' ')[1]);
+        if (decoded.role === 'admin') isAdmin = true;
+      } catch {}
+    }
+
     const nominees = await nomineeService.getNominees(isAdmin);
+    res.json({
+      success: true,
+      data: nominees
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAdminNominees = async (req, res, next) => {
+  try {
+    const nominees = await nomineeService.getNominees(true);
     res.json({
       success: true,
       data: nominees
@@ -68,5 +89,14 @@ export const toggleNomineeActive = async (req, res, next) => {
     });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteAllNominees = async (req, res, next) => {
+  try {
+    const result = await nomineeService.deleteAllNominees();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

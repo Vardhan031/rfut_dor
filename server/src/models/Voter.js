@@ -17,15 +17,13 @@ const VoterSchema = new mongoose.Schema(
     },
     plaintextCode: {
       type: String,
-      default: null,
       trim: true
     },
     codeHash: {
       type: String,
       sparse: true,
       unique: true,
-      select: false,
-      default: null
+      select: false
     },
     codeStatus: {
       type: String,

@@ -75,3 +75,12 @@ export const toggleNomineeActive = async (id) => {
   await nominee.save();
   return nominee;
 };
+
+export const deleteAllNominees = async () => {
+  const result = await Nominee.deleteMany({});
+  return {
+    success: true,
+    message: `All nominees deleted (${result.deletedCount} nominees removed).`,
+    deletedCount: result.deletedCount
+  };
+};

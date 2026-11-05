@@ -6,9 +6,11 @@ const router = Router();
 
 // Public / voter view of nominees
 router.get('/', nomineeController.getNominees);
+router.get('/admin', authAdmin, nomineeController.getAdminNominees);
 
 // Protected admin nominee management
 router.post('/', authAdmin, nomineeController.createNominee);
+router.delete('/all', authAdmin, nomineeController.deleteAllNominees);
 router.put('/:id', authAdmin, nomineeController.updateNominee);
 router.delete('/:id', authAdmin, nomineeController.deleteNominee);
 router.patch('/:id/toggle', authAdmin, nomineeController.toggleNomineeActive);

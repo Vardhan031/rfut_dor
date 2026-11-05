@@ -110,7 +110,7 @@ export const AdminResults = () => {
             Official Results & Standings
           </h1>
           <p className="text-typography-secondary text-sm font-sans mt-0.5">
-            Calculated across {data?.totalBallots} sealed ballots ({data?.totalBallots * 67} points total distributed).
+            Calculated across {data?.totalBallots || 0} sealed ballots ({((data?.totalBallots || 0) * 67)} points total distributed).
           </p>
         </div>
 
@@ -293,7 +293,14 @@ export const AdminResults = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-border/60">
-              {leaderboard.map((item) => (
+              {leaderboard.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-typography-muted font-sans text-xs">
+                    No nominees registered or votes recorded yet.
+                  </td>
+                </tr>
+              ) : (
+                leaderboard.map((item) => (
                 <tr
                   key={item._id}
                   className={`hover:bg-surface-hover transition-colors ${
@@ -375,7 +382,7 @@ export const AdminResults = () => {
                     </span>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

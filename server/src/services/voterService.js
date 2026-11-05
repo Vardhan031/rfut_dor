@@ -62,8 +62,6 @@ export const generateSingleCode = async ({ discordUsername, category, generateCo
     const voter = await Voter.create({
       discordUsername: trimmedUsername,
       category: validCategory,
-      plaintextCode: null,
-      codeHash: null,
       codeStatus: CODE_STATUS.UNASSIGNED,
       hasVoted: false
     });
@@ -252,22 +250,18 @@ export const deleteCodeForVoter = async (voterId) => {
     throw new Error('Voter not found.');
   }
 
-  voter.plaintextCode = null;
-  voter.codeHash = null;
-  voter.codeStatus = CODE_STATUS.UNASSIGNED;
-  await voter.save();
+  await Voter.updateOne(
+    { _id: voterId },
+    {
+      $unset: { codeHash: 1, plaintextCode: 1 },
+      $set: { codeStatus: CODE_STATUS.UNASSIGNED }
+    }
+  );
+
+  const updated = await Voter.findById(voterId).lean();
 
   return {
-    voter: {
-      _id: voter._id,
-      discordUsername: voter.discordUsername,
-      category: voter.category,
-      codeStatus: voter.codeStatus,
-      plaintextCode: null,
-      hasVoted: voter.hasVoted,
-      votedAt: voter.votedAt,
-      createdAt: voter.createdAt
-    }
+    voter: updated
   };
 };
 
