@@ -24,6 +24,7 @@ router.post('/voters/bulk-generate', voterController.generateBulkCodes);
 router.get('/voters/export', voterController.exportVotersCsv);
 router.get('/voters/:id/code', voterController.getVoterCode);
 router.post('/voters/:id/generate-code', voterController.generateCodeForVoter);
+router.delete('/voters/all', voterController.deleteAllVoters);
 router.delete('/voters/:id/code', voterController.deleteCodeForVoter);
 router.delete('/voters/:id/ballot', voterController.removeVoterBallot);
 router.delete('/voters/:id', voterController.deleteVoter);

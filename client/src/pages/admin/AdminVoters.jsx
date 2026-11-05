@@ -16,7 +16,10 @@ import {
   Trash2,
   RefreshCw,
   Eye,
-  Check
+  Check,
+  UserPlus,
+  UserMinus,
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -33,13 +36,16 @@ export const AdminVoters = () => {
   const [showSingleModal, setShowSingleModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [selectedVoterForCode, setSelectedVoterForCode] = useState(null);
-  const [deleteConfirmVoter, setDeleteConfirmVoter] = useState(null);
+  const [deleteConfirmVoter, setDeleteConfirmVoter] = useState(null); // for Delete Code
+  const [voterToDelete, setVoterToDelete] = useState(null); // for Delete Voter (single)
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false); // for Delete All Voters
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [copiedCode, setCopiedCode] = useState(false);
 
-  // Single code form
+  // Single voter / code form
   const [singleDiscord, setSingleDiscord] = useState('');
   const [singleCategory, setSingleCategory] = useState('Regular Member');
+  const [generateCodeImmediately, setGenerateCodeImmediately] = useState(true);
   const [generatedSingle, setGeneratedSingle] = useState(null);
 
   // Bulk codes form
@@ -108,7 +114,7 @@ export const AdminVoters = () => {
     }
   };
 
-  const handleGenerateSingle = async (e) => {
+  const handleAddVoter = async (e) => {
     e.preventDefault();
     if (!singleDiscord.trim()) {
       toast.warning('Please enter a Discord username.');
@@ -119,19 +125,25 @@ export const AdminVoters = () => {
     try {
       const res = await api.post('/admin/voters/generate', {
         discordUsername: singleDiscord.trim(),
-        category: singleCategory
+        category: singleCategory,
+        generateCode: generateCodeImmediately
       });
       if (res.data?.success) {
-        setGeneratedSingle({
-          discordUsername: res.data.voter.discordUsername,
-          category: res.data.voter.category,
-          plaintextCode: res.data.plaintextCode
-        });
-        toast.success(`Voting code generated for ${res.data.voter.discordUsername}`);
+        if (generateCodeImmediately && res.data.plaintextCode) {
+          setGeneratedSingle({
+            discordUsername: res.data.voter.discordUsername,
+            category: res.data.voter.category,
+            plaintextCode: res.data.plaintextCode
+          });
+          toast.success(`Voter added and voting code generated for ${res.data.voter.discordUsername}`);
+        } else {
+          toast.success(`Voter ${res.data.voter.discordUsername} added to registry.`);
+          setShowSingleModal(false);
+        }
         fetchVoters();
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to generate code.');
+      toast.error(err.response?.data?.message || 'Failed to add voter.');
     } finally {
       setGenerating(false);
     }
@@ -285,6 +297,46 @@ export const AdminVoters = () => {
     }
   };
 
+  // Delete single voter entirely
+  const handleDeleteIndividualVoter = async (voter) => {
+    try {
+      setActionLoadingId(voter._id);
+      const res = await api.delete(`/admin/voters/${voter._id}`);
+      if (res.data?.success) {
+        toast.success(`Voter ${voter.discordUsername} deleted successfully.`);
+        setVoters((prev) => prev.filter((v) => v._id !== voter._id));
+        setPagination((prev) => ({ ...prev, total: Math.max(0, prev.total - 1) }));
+        setVoterToDelete(null);
+        if (selectedVoterForCode?._id === voter._id) {
+          setSelectedVoterForCode(null);
+        }
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete voter.');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // Delete all voters
+  const handleDeleteAllVoters = async () => {
+    try {
+      setActionLoadingId('all');
+      const res = await api.delete('/admin/voters/all');
+      if (res.data?.success) {
+        toast.success('All voters and associated ballots have been purged.');
+        setVoters([]);
+        setPagination({ total: 0, totalPages: 1 });
+        setShowDeleteAllModal(false);
+        setSelectedVoterForCode(null);
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete all voters.');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   // Invalidate and remove ballot for an individual voter
   const handleRemoveBallotForVoter = async (voter) => {
     try {
@@ -331,23 +383,26 @@ export const AdminVoters = () => {
             Voters & Codes
           </h1>
           <p className="text-typography-secondary text-sm font-sans mt-0.5">
-            Issue, inspect, and manage cryptographically secured single-use voting codes.
+            Issue, inspect, and manage authorized voters and single-use credentials.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Add Voter Button */}
           <button
             onClick={() => {
               setGeneratedSingle(null);
               setSingleDiscord('');
+              setGenerateCodeImmediately(true);
               setShowSingleModal(true);
             }}
             className="px-4 py-2 rounded-xl bg-[#D4AF57] hover:bg-[#E8C97B] text-[#0A0907] font-sans font-semibold text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-[0_2px_12px_rgba(212,175,87,0.25)]"
           >
-            <Plus className="w-4 h-4" />
-            <span>Issue Single Code</span>
+            <UserPlus className="w-4 h-4" />
+            <span>Add Voter</span>
           </button>
 
+          {/* Bulk Add Button */}
           <button
             onClick={() => {
               setGeneratedBulk(null);
@@ -357,9 +412,10 @@ export const AdminVoters = () => {
             className="px-4 py-2 rounded-xl bg-surface-card hover:bg-surface-hover text-typography-primary border border-surface-border hover:border-[#D4AF57]/50 font-sans font-medium text-xs uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer"
           >
             <FileSpreadsheet className="w-4 h-4 text-[#D4AF57]/80" />
-            <span>Bulk Generation</span>
+            <span>Bulk Add</span>
           </button>
 
+          {/* Export CSV Button */}
           <button
             onClick={handleExportVotersCsv}
             className="px-3.5 py-2 rounded-xl border border-surface-border bg-surface-card hover:bg-surface-hover text-typography-secondary hover:text-typography-primary text-xs font-sans transition flex items-center gap-1.5 cursor-pointer"
@@ -367,6 +423,18 @@ export const AdminVoters = () => {
             <Download className="w-4 h-4" />
             <span>Export CSV</span>
           </button>
+
+          {/* Delete All Voters Button */}
+          {voters.length > 0 && (
+            <button
+              onClick={() => setShowDeleteAllModal(true)}
+              className="px-3.5 py-2 rounded-xl border border-rose-900/50 bg-rose-950/20 hover:bg-rose-900/40 text-rose-300 hover:text-rose-200 text-xs font-sans transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+              title="Delete all voters and clear the entire registry"
+            >
+              <Trash2 className="w-4 h-4 text-rose-400" />
+              <span>Delete All Voters</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -458,7 +526,7 @@ export const AdminVoters = () => {
                       </span>
                     </td>
 
-                    {/* Code Status (Clickable when Assigned to view generated code) */}
+                    {/* Code Status */}
                     <td className="py-3 px-4">
                       {v.codeStatus === 'Assigned' ? (
                         <button
@@ -509,7 +577,7 @@ export const AdminVoters = () => {
                       {v.votedAt ? new Date(v.votedAt).toLocaleString() : '—'}
                     </td>
 
-                    {/* Actions Column: Generate Code / Delete Code */}
+                    {/* Actions Column */}
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         {v.codeStatus === 'Assigned' ? (
@@ -522,7 +590,7 @@ export const AdminVoters = () => {
                               title="View code"
                             >
                               <Eye className="w-3.5 h-3.5" />
-                              <span className="hidden lg:inline">View</span>
+                              <span className="hidden xl:inline">View</span>
                             </button>
 
                             {/* Regenerate Code */}
@@ -536,7 +604,7 @@ export const AdminVoters = () => {
                               <RefreshCw
                                 className={`w-3.5 h-3.5 ${actionLoadingId === v._id ? 'animate-spin' : ''}`}
                               />
-                              <span className="hidden lg:inline">Regen</span>
+                              <span className="hidden xl:inline">Regen</span>
                             </button>
 
                             {/* Delete Code */}
@@ -544,11 +612,11 @@ export const AdminVoters = () => {
                               type="button"
                               onClick={() => setDeleteConfirmVoter(v)}
                               disabled={actionLoadingId === v._id}
-                              className="px-2 py-1 rounded-lg bg-rose-950/20 hover:bg-rose-900/35 text-rose-400 hover:text-rose-300 border border-rose-900/40 hover:border-rose-700/60 text-[11px] font-sans transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                              title="Delete code for this voter"
+                              className="px-2 py-1 rounded-lg bg-amber-950/20 hover:bg-amber-900/35 text-amber-400 hover:text-amber-300 border border-amber-900/40 hover:border-amber-700/60 text-[11px] font-sans transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                              title="Delete code only (leaves voter in registry)"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span className="hidden lg:inline">Delete Code</span>
+                              <Key className="w-3.5 h-3.5" />
+                              <span className="hidden xl:inline">Del Code</span>
                             </button>
                           </>
                         ) : (
@@ -564,6 +632,18 @@ export const AdminVoters = () => {
                             <span>Generate Code</span>
                           </button>
                         )}
+
+                        {/* Delete Voter Button (Completely removes voter) */}
+                        <button
+                          type="button"
+                          onClick={() => setVoterToDelete(v)}
+                          disabled={actionLoadingId === v._id}
+                          className="px-2 py-1 rounded-lg bg-rose-950/25 hover:bg-rose-900/40 text-rose-400 hover:text-rose-300 border border-rose-900/40 hover:border-rose-700/60 text-[11px] font-sans transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                          title="Delete voter permanently from registry"
+                        >
+                          <UserMinus className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Delete Voter</span>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -597,11 +677,10 @@ export const AdminVoters = () => {
         </div>
       </div>
 
-      {/* CODE INSPECTOR MODAL (Triggered when clicking "Assigned" or "View") */}
+      {/* CODE INSPECTOR MODAL */}
       {selectedVoterForCode && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="max-w-md w-full bg-[#110F0B] border border-[#554628] rounded-2xl p-6 shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(212,175,87,0.15)] relative space-y-5">
-            {/* Close button */}
             <button
               onClick={() => setSelectedVoterForCode(null)}
               className="absolute top-4 right-4 p-1 rounded-lg text-typography-muted hover:text-typography-primary hover:bg-[#1A1813] transition cursor-pointer"
@@ -609,7 +688,6 @@ export const AdminVoters = () => {
               <X className="w-5 h-5" />
             </button>
 
-            {/* Header */}
             <div>
               <span className="text-[10px] font-mono tracking-[0.25em] uppercase text-[#D4AF57] block mb-1">
                 VOTING CODE ACCESS
@@ -635,7 +713,6 @@ export const AdminVoters = () => {
               </div>
             </div>
 
-            {/* Monospace Code Box */}
             <div className="p-5 rounded-xl bg-[#0A0907] border border-[#4A3D24] text-center space-y-3">
               <span className="text-[10px] text-[#A69D8B] uppercase tracking-widest block font-mono">
                 Active Plaintext Voting Code
@@ -672,7 +749,6 @@ export const AdminVoters = () => {
               )}
             </div>
 
-            {/* Quick Actions in Modal */}
             <div className="pt-2 flex items-center justify-between gap-2 border-t border-surface-border/60">
               {selectedVoterForCode.plaintextCode ? (
                 <>
@@ -685,7 +761,7 @@ export const AdminVoters = () => {
                     <RefreshCw
                       className={`w-3.5 h-3.5 ${actionLoadingId === selectedVoterForCode._id ? 'animate-spin' : ''}`}
                     />
-                    <span>Regenerate</span>
+                    <span>Regen Code</span>
                   </button>
                   <div className="flex items-center gap-2">
                     {selectedVoterForCode.hasVoted && (
@@ -703,25 +779,38 @@ export const AdminVoters = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        setDeleteConfirmVoter(selectedVoterForCode);
+                        setVoterToDelete(selectedVoterForCode);
                         setSelectedVoterForCode(null);
                       }}
                       className="px-3 py-2 rounded-lg bg-rose-950/20 hover:bg-rose-900/30 text-rose-400 hover:text-rose-300 border border-rose-900/30 text-xs font-sans flex items-center gap-1.5 transition cursor-pointer"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete Code</span>
+                      <UserMinus className="w-3.5 h-3.5" />
+                      <span>Delete Voter</span>
                     </button>
                   </div>
                 </>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => handleGenerateForVoter(selectedVoterForCode)}
-                  className="w-full py-2.5 rounded-lg bg-[#D4AF57] hover:bg-[#E8C97B] text-[#0A0907] text-xs font-semibold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Generate Code Now</span>
-                </button>
+                <div className="flex items-center justify-between w-full gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleGenerateForVoter(selectedVoterForCode)}
+                    className="py-2.5 px-4 rounded-lg bg-[#D4AF57] hover:bg-[#E8C97B] text-[#0A0907] text-xs font-semibold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 flex-1"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Generate Code Now</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVoterToDelete(selectedVoterForCode);
+                      setSelectedVoterForCode(null);
+                    }}
+                    className="py-2.5 px-3 rounded-lg bg-rose-950/20 hover:bg-rose-900/30 text-rose-400 border border-rose-900/30 text-xs font-sans transition cursor-pointer flex items-center gap-1.5"
+                  >
+                    <UserMinus className="w-3.5 h-3.5" />
+                    <span>Delete Voter</span>
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -731,21 +820,21 @@ export const AdminVoters = () => {
       {/* DELETE CODE CONFIRMATION MODAL */}
       {deleteConfirmVoter && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="max-w-md w-full bg-[#110F0B] border border-rose-900/50 rounded-2xl p-6 shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(244,63,94,0.15)] relative space-y-4 font-sans">
-            <div className="flex items-center gap-3 text-rose-400">
-              <div className="p-2.5 rounded-xl bg-rose-950/50 border border-rose-900/50">
-                <Trash2 className="w-5 h-5 text-rose-400" />
+          <div className="max-w-md w-full bg-[#110F0B] border border-amber-900/50 rounded-2xl p-6 shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(245,158,11,0.15)] relative space-y-4 font-sans">
+            <div className="flex items-center gap-3 text-amber-400">
+              <div className="p-2.5 rounded-xl bg-amber-950/50 border border-amber-900/50">
+                <Key className="w-5 h-5 text-amber-400" />
               </div>
               <div>
                 <h3 className="font-playfair font-bold text-lg text-[#F5F0E6]">Delete Voting Code</h3>
                 <p className="text-xs text-typography-muted">
-                  Discord: <span className="font-mono text-rose-300">{deleteConfirmVoter.discordUsername}</span>
+                  Discord: <span className="font-mono text-amber-300">{deleteConfirmVoter.discordUsername}</span>
                 </p>
               </div>
             </div>
 
             <p className="text-xs text-typography-secondary leading-relaxed">
-              Are you sure you want to delete the active voting code for this voter? This will invalidate their code and mark their code status as <strong className="text-typography-primary">Unassigned</strong>.
+              Are you sure you want to delete the active code for this voter? Their voter record will remain in the registry, but their code status will be set to <strong className="text-typography-primary">Unassigned</strong>.
             </p>
 
             <div className="pt-2 flex items-center justify-end gap-2.5">
@@ -760,7 +849,7 @@ export const AdminVoters = () => {
                 type="button"
                 onClick={() => handleDeleteCodeForVoter(deleteConfirmVoter)}
                 disabled={actionLoadingId === deleteConfirmVoter._id}
-                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-black font-semibold text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-sm disabled:opacity-50"
               >
                 {actionLoadingId === deleteConfirmVoter._id ? 'Deleting...' : 'Delete Code'}
               </button>
@@ -769,7 +858,111 @@ export const AdminVoters = () => {
         </div>
       )}
 
-      {/* SINGLE CODE MODAL */}
+      {/* DELETE SINGLE VOTER CONFIRMATION MODAL */}
+      {voterToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="max-w-md w-full bg-[#110F0B] border border-rose-900/60 rounded-2xl p-6 shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_35px_rgba(244,63,94,0.2)] relative space-y-4 font-sans">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-900/50">
+                <UserMinus className="w-5 h-5 text-rose-400" />
+              </div>
+              <div>
+                <h3 className="font-playfair font-bold text-lg text-[#F5F0E6]">Delete Voter</h3>
+                <p className="text-xs text-typography-muted">
+                  Discord: <span className="font-mono text-rose-300 font-semibold">{voterToDelete.discordUsername}</span>
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-typography-secondary leading-relaxed">
+              Are you sure you want to permanently delete this voter from the registry?
+            </p>
+
+            <div className="p-3 rounded-xl bg-[#0A0907] border border-[#4A3D24] text-[11px] text-[#A69D8B] space-y-1">
+              <p className="text-rose-300">&bull; The voter is removed permanently from the registry.</p>
+              <p className="text-[#D4AF57]">&bull; Any assigned voting code is revoked immediately.</p>
+              {voterToDelete.hasVoted && (
+                <p className="text-rose-400 font-semibold">&bull; Any submitted ballot will be removed and deducted from the live leaderboard.</p>
+              )}
+            </div>
+
+            <div className="pt-2 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setVoterToDelete(null)}
+                className="px-4 py-2 rounded-lg bg-surface hover:bg-surface-hover border border-surface-border text-xs text-typography-secondary hover:text-typography-primary transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteIndividualVoter(voterToDelete)}
+                disabled={actionLoadingId === voterToDelete._id}
+                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+              >
+                {actionLoadingId === voterToDelete._id ? 'Deleting...' : 'Delete Voter'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE ALL VOTERS CONFIRMATION MODAL */}
+      {showDeleteAllModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="max-w-md w-full bg-[#110F0B] border border-rose-800/80 rounded-2xl p-6 shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_40px_rgba(244,63,94,0.3)] relative space-y-4 font-sans">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-800/60">
+                <AlertTriangle className="w-6 h-6 text-rose-400" />
+              </div>
+              <div>
+                <h3 className="font-playfair font-bold text-xl text-[#F5F0E6]">Delete All Voters?</h3>
+                <p className="text-xs text-rose-300 font-mono">Irreversible Action</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-typography-secondary leading-relaxed">
+              Are you sure you want to permanently delete <strong className="text-[#F5F0E6]">ALL {pagination.total || voters.length} voters</strong>?
+            </p>
+
+            <div className="p-3.5 rounded-xl bg-[#0A0907] border border-rose-900/40 text-[11px] text-rose-300/90 space-y-1.5">
+              <p>&bull; The entire voter registry will be wiped to 0 records.</p>
+              <p>&bull; All generated voting codes will be invalidated.</p>
+              <p>&bull; All cast ballots will be cleared and the leaderboard reset.</p>
+            </div>
+
+            <div className="pt-2 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowDeleteAllModal(false)}
+                className="px-4 py-2 rounded-lg bg-surface hover:bg-surface-hover border border-surface-border text-xs text-typography-secondary hover:text-typography-primary transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAllVoters}
+                disabled={actionLoadingId === 'all'}
+                className="px-5 py-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-[0_4px_16px_rgba(244,63,94,0.35)] disabled:opacity-50"
+              >
+                {actionLoadingId === 'all' ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Purging All...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Yes, Delete All Voters</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD SINGLE VOTER MODAL */}
       {showSingleModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-surface-card border border-surface-border rounded-2xl p-6 relative space-y-4 shadow-2xl">
@@ -781,11 +974,11 @@ export const AdminVoters = () => {
             </button>
 
             <h3 className="font-playfair font-semibold text-xl uppercase tracking-wide text-typography-primary">
-              Issue Individual Voting Code
+              Add Voter to Registry
             </h3>
 
             {!generatedSingle ? (
-              <form onSubmit={handleGenerateSingle} className="space-y-4 pt-1 font-sans">
+              <form onSubmit={handleAddVoter} className="space-y-4 pt-1 font-sans">
                 <div>
                   <label className="block text-xs font-medium uppercase tracking-wider text-typography-secondary mb-1">
                     Discord Username
@@ -815,6 +1008,19 @@ export const AdminVoters = () => {
                   </select>
                 </div>
 
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="genImmediately"
+                    checked={generateCodeImmediately}
+                    onChange={(e) => setGenerateCodeImmediately(e.target.checked)}
+                    className="w-4 h-4 rounded accent-[#D4AF57] cursor-pointer"
+                  />
+                  <label htmlFor="genImmediately" className="text-xs text-typography-secondary cursor-pointer select-none">
+                    Generate voting code immediately
+                  </label>
+                </div>
+
                 <div className="pt-2 flex justify-end gap-2">
                   <button
                     type="button"
@@ -828,14 +1034,14 @@ export const AdminVoters = () => {
                     disabled={generating}
                     className="px-5 py-2.5 rounded-lg bg-[#D4AF57] hover:bg-[#E8C97B] text-[#0A0907] font-sans font-semibold text-xs uppercase tracking-wider shadow-sm cursor-pointer disabled:opacity-50"
                   >
-                    {generating ? 'Generating...' : 'Issue Code'}
+                    {generating ? 'Adding...' : 'Add Voter'}
                   </button>
                 </div>
               </form>
             ) : (
               <div className="space-y-4 pt-1 font-sans">
                 <div className="p-3 rounded-xl bg-[#D4AF57]/10 border border-[#D4AF57]/30 text-[#D4AF57] text-xs">
-                  Credentials issued for <strong>{generatedSingle.discordUsername}</strong> ({generatedSingle.category}).
+                  Voter registered: <strong>{generatedSingle.discordUsername}</strong> ({generatedSingle.category}).
                 </div>
 
                 <div className="p-4 rounded-xl bg-background border border-surface-border text-center space-y-2">
@@ -880,7 +1086,7 @@ export const AdminVoters = () => {
             </button>
 
             <h3 className="font-playfair font-semibold text-xl uppercase tracking-wide text-typography-primary">
-              Bulk Code Generation
+              Bulk Add Voters & Generate Codes
             </h3>
 
             {!generatedBulk ? (

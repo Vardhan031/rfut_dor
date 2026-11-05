@@ -1,4 +1,5 @@
 import { Voter } from '../models/Voter.js';
+import { Ballot } from '../models/Ballot.js';
 import { generateVotingCode, hashVotingCode, normalizeCode } from '../utils/codeGenerator.js';
 import { signVoterToken } from '../utils/jwt.js';
 import { getSystemSettings } from './adminService.js';
@@ -42,7 +43,7 @@ export const verifyCodeAndStartSession = async (plainCode) => {
   };
 };
 
-export const generateSingleCode = async ({ discordUsername, category }) => {
+export const generateSingleCode = async ({ discordUsername, category, generateCode = true }) => {
   if (!discordUsername || !discordUsername.trim()) {
     throw new Error('Discord username is required.');
   }
@@ -56,13 +57,37 @@ export const generateSingleCode = async ({ discordUsername, category }) => {
     throw new Error(`A voter with Discord username "${trimmedUsername}" already exists.`);
   }
 
+  // If admin chooses to add voter without generating code immediately
+  if (!generateCode) {
+    const voter = await Voter.create({
+      discordUsername: trimmedUsername,
+      category: validCategory,
+      plaintextCode: null,
+      codeHash: null,
+      codeStatus: CODE_STATUS.UNASSIGNED,
+      hasVoted: false
+    });
+
+    return {
+      voter: {
+        _id: voter._id,
+        discordUsername: voter.discordUsername,
+        category: voter.category,
+        codeStatus: voter.codeStatus,
+        hasVoted: voter.hasVoted,
+        createdAt: voter.createdAt
+      },
+      plaintextCode: null
+    };
+  }
+
   let code;
   let codeHash;
   let isUnique = false;
   let attempts = 0;
 
   // Ensure collision-free code generation
-  while (!isUnique && attempts < 10) {
+  while (!isUnique && attempts < 15) {
     code = generateVotingCode();
     codeHash = hashVotingCode(code);
     const clash = await Voter.findOne({ codeHash });
@@ -269,8 +294,24 @@ export const deleteVoter = async (voterId) => {
     throw new Error('Voter not found.');
   }
 
+  // Clean up any ballot submitted by this voter
+  await Ballot.deleteMany({ voterId });
   await Voter.findByIdAndDelete(voterId);
+
   return { success: true, message: `Voter "${voter.discordUsername}" deleted successfully.` };
+};
+
+export const deleteAllVoters = async () => {
+  const [voterResult, ballotResult] = await Promise.all([
+    Voter.deleteMany({}),
+    Ballot.deleteMany({})
+  ]);
+
+  return {
+    success: true,
+    message: `All voters removed (${voterResult.deletedCount} voters, ${ballotResult.deletedCount} ballots).`,
+    deletedCount: voterResult.deletedCount
+  };
 };
 
 export const getVotersCsvData = async () => {

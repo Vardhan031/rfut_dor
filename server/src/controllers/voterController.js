@@ -90,11 +90,11 @@ export const submitVoterBallot = async (req, res, next) => {
 // Admin endpoints for code management
 export const generateSingleCode = async (req, res, next) => {
   try {
-    const { discordUsername, category } = req.body;
-    const result = await voterService.generateSingleCode({ discordUsername, category });
+    const { discordUsername, category, generateCode } = req.body;
+    const result = await voterService.generateSingleCode({ discordUsername, category, generateCode });
     res.status(201).json({
       success: true,
-      message: `Voting code generated for ${discordUsername}.`,
+      message: `Voter ${discordUsername} registered successfully.`,
       ...result
     });
   } catch (error) {
@@ -207,5 +207,17 @@ export const removeVoterBallot = async (req, res, next) => {
     });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteAllVoters = async (req, res, next) => {
+  try {
+    const result = await voterService.deleteAllVoters();
+    res.json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
