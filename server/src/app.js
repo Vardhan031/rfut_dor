@@ -32,6 +32,7 @@ app.use(
       if (!origin) return callback(null, true);
       if (
         origin === 'http://localhost:5173' ||
+        origin.endsWith('.vercel.app') ||
         origin.endsWith('.ngrok-free.dev') ||
         origin.endsWith('.ngrok.io') ||
         (process.env.CORS_ORIGIN && process.env.CORS_ORIGIN.split(',').includes(origin))

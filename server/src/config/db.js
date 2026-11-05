@@ -10,14 +10,30 @@ const __dirname = path.dirname(__filename);
 let mongoMemoryServerInstance = null;
 
 export const connectDB = async () => {
-  const primaryUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/rfut_dor';
+  const primaryUri = process.env.MONGO_URI;
+
+  // Cloud database connection (e.g. MongoDB Atlas in production)
+  if (primaryUri && !primaryUri.includes('127.0.0.1') && !primaryUri.includes('localhost')) {
+    try {
+      await mongoose.connect(primaryUri, {
+        serverSelectionTimeoutMS: 15000
+      });
+      console.log('[DB] Connected successfully to Cloud MongoDB Atlas');
+      return;
+    } catch (err) {
+      console.error('[DB] Failed to connect to configured MONGO_URI:', err.message);
+      throw err;
+    }
+  }
+
+  const localUri = primaryUri || 'mongodb://127.0.0.1:27017/rfut_dor';
 
   try {
-    // Attempt connecting to local MongoDB service (timeout 1500ms)
-    await mongoose.connect(primaryUri, {
-      serverSelectionTimeoutMS: 1500
+    // Attempt connecting to local MongoDB service
+    await mongoose.connect(localUri, {
+      serverSelectionTimeoutMS: 2000
     });
-    console.log(`[DB] Connected to primary MongoDB at ${primaryUri}`);
+    console.log(`[DB] Connected to primary MongoDB at ${localUri}`);
     return;
   } catch (err) {
     // Check if persistent embedded MongoDB at port 27018 is already running
