@@ -69,3 +69,17 @@ export const getBallots = async (req, res, next) => {
     next(error);
   }
 };
+
+export const removeBallot = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await ballotService.removeBallot(id);
+    res.json({
+      success: true,
+      message: 'Ballot successfully invalidated and removed from leaderboard.',
+      ...result
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

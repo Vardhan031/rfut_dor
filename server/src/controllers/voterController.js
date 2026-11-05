@@ -195,3 +195,17 @@ export const deleteVoter = async (req, res, next) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+export const removeVoterBallot = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await ballotService.removeBallotByVoter(id);
+    res.json({
+      success: true,
+      message: 'Voter ballot removed and deducted from leaderboard.',
+      ...result
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

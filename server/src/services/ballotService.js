@@ -191,3 +191,42 @@ export const getAllBallotsForAdmin = async () => {
 
   return ballots;
 };
+
+export const removeBallot = async (ballotId) => {
+  const ballot = await Ballot.findById(ballotId);
+  if (!ballot) {
+    throw new Error('Ballot not found.');
+  }
+
+  const voterId = ballot.voterId;
+
+  await Ballot.findByIdAndDelete(ballotId);
+
+  let resetVoter = null;
+  if (voterId) {
+    resetVoter = await Voter.findByIdAndUpdate(
+      voterId,
+      { hasVoted: false, votedAt: null },
+      { new: true }
+    );
+  }
+
+  return {
+    removedBallotId: ballotId,
+    voter: resetVoter
+      ? {
+          _id: resetVoter._id,
+          discordUsername: resetVoter.discordUsername,
+          hasVoted: resetVoter.hasVoted
+        }
+      : null
+  };
+};
+
+export const removeBallotByVoter = async (voterId) => {
+  const ballot = await Ballot.findOne({ voterId });
+  if (!ballot) {
+    throw new Error('No ballot found for this voter.');
+  }
+  return removeBallot(ballot._id);
+};

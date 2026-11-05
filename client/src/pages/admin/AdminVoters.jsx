@@ -285,6 +285,40 @@ export const AdminVoters = () => {
     }
   };
 
+  // Invalidate and remove ballot for an individual voter
+  const handleRemoveBallotForVoter = async (voter) => {
+    try {
+      setActionLoadingId(voter._id);
+      const res = await api.delete(`/admin/voters/${voter._id}/ballot`);
+      if (res.data?.success) {
+        toast.success(`Ballot for ${voter.discordUsername} removed. Leaderboard updated.`);
+        setVoters((prev) =>
+          prev.map((v) =>
+            v._id === voter._id
+              ? {
+                  ...v,
+                  hasVoted: false,
+                  votedAt: null
+                }
+              : v
+          )
+        );
+
+        if (selectedVoterForCode?._id === voter._id) {
+          setSelectedVoterForCode({
+            ...selectedVoterForCode,
+            hasVoted: false,
+            votedAt: null
+          });
+        }
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to remove ballot.');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -653,17 +687,31 @@ export const AdminVoters = () => {
                     />
                     <span>Regenerate</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDeleteConfirmVoter(selectedVoterForCode);
-                      setSelectedVoterForCode(null);
-                    }}
-                    className="px-3 py-2 rounded-lg bg-rose-950/20 hover:bg-rose-900/30 text-rose-400 hover:text-rose-300 border border-rose-900/30 text-xs font-sans flex items-center gap-1.5 transition cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Delete Code</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {selectedVoterForCode.hasVoted && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveBallotForVoter(selectedVoterForCode)}
+                        disabled={actionLoadingId === selectedVoterForCode._id}
+                        className="px-3 py-2 rounded-lg bg-amber-950/20 hover:bg-amber-900/30 text-amber-400 hover:text-amber-300 border border-amber-900/30 text-xs font-sans flex items-center gap-1.5 transition cursor-pointer"
+                        title="Invalidate ballot and deduct votes from leaderboard"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Invalidate Ballot</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteConfirmVoter(selectedVoterForCode);
+                        setSelectedVoterForCode(null);
+                      }}
+                      className="px-3 py-2 rounded-lg bg-rose-950/20 hover:bg-rose-900/30 text-rose-400 hover:text-rose-300 border border-rose-900/30 text-xs font-sans flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Code</span>
+                    </button>
+                  </div>
                 </>
               ) : (
                 <button
