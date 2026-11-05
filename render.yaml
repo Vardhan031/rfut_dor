@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: rfut-dor
+    env: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CODE_SALT
+        generateValue: true
+      - key: ADMIN_DEFAULT_USERNAME
+        value: notapro@dor.com
+      - key: ADMIN_DEFAULT_EMAIL
+        value: notapro@dor.com
+      - key: ADMIN_DEFAULT_PASSWORD
+        value: Notapro@rfutdor

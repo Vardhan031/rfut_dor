@@ -2,6 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import adminRoutes from './routes/adminRoutes.js';
 import voterRoutes from './routes/voterRoutes.js';
 import nomineeRoutes from './routes/nomineeRoutes.js';
@@ -9,10 +12,19 @@ import { generalLimiter } from './middleware/rateLimiter.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { getSystemSettings } from './services/adminService.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientDistPath = path.resolve(__dirname, '../../client/dist');
+
 const app = express();
 
 // Security middlewares
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false
+  })
+);
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -66,7 +78,25 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/voter', voterRoutes);
 app.use('/api/nominees', nomineeRoutes);
 
-// 404 handler
+// Serve static client assets if built in production
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+
+  // SPA fallback for all non-API GET requests
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
+
+// 404 handler for unmatched API routes
+app.use('/api', (req, res) => {
+  res.status(404).json({ success: false, message: `API route not found: ${req.method} ${req.url}` });
+});
+
+// General 404 handler
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route not found: ${req.method} ${req.url}` });
 });

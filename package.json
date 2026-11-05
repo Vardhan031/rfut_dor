@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "RFUT DOR - Ranked Choice Voting Platform for Discord Community",
   "scripts": {
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "build": "npm install --prefix client && npm run build --prefix client && npm install --prefix server",
+    "start": "node server/src/server.js",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
     "build:client": "cd client && npm run build",
