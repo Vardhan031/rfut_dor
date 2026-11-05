@@ -3,8 +3,9 @@ import * as ballotService from '../services/ballotService.js';
 
 export const login = async (req, res, next) => {
   try {
-    const { username, password } = req.body;
-    const result = await adminService.loginAdmin(username, password);
+    const { username, email, identifier, password } = req.body;
+    const loginIdentifier = email || username || identifier;
+    const result = await adminService.loginAdmin(loginIdentifier, password);
     res.json({
       success: true,
       message: 'Admin authentication successful.',

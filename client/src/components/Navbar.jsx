@@ -113,7 +113,7 @@ export const Navbar = () => {
           {isAdminRoute ? (
             admin ? (
               <div className="flex items-center gap-3">
-                <span className="text-xs font-mono text-[#D4AF57]">{admin.username}</span>
+                <span className="text-xs font-mono text-[#D4AF57]">{admin.email || admin.username}</span>
                 <button
                   onClick={() => {
                     logoutAdmin();

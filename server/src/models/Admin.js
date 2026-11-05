@@ -9,6 +9,11 @@ const AdminSchema = new mongoose.Schema(
       trim: true,
       lowercase: true
     },
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true
+    },
     passwordHash: {
       type: String,
       required: true

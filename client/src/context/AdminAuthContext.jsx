@@ -12,16 +12,22 @@ export const AdminAuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(false);
 
-  const loginAdmin = async (username, password) => {
+  const loginAdmin = async (identifier, password) => {
     setLoading(true);
     try {
-      const res = await api.post('/admin/login', { username, password });
+      const res = await api.post('/admin/login', {
+        identifier,
+        username: identifier,
+        email: identifier,
+        password
+      });
       if (res.data?.success) {
         localStorage.setItem('rfut_admin_token', res.data.token);
         localStorage.setItem('rfut_admin_user', JSON.stringify(res.data.admin));
         setToken(res.data.token);
         setAdmin(res.data.admin);
-        toast.success(`Admin logged in as ${res.data.admin.username}`);
+        const displayName = res.data.admin?.email || res.data.admin?.username || 'Admin';
+        toast.success(`Admin logged in as ${displayName}`);
         return { success: true };
       }
       return { success: false, message: res.data?.message || 'Login failed.' };

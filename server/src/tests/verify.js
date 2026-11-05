@@ -36,9 +36,19 @@ async function runVerification() {
   try {
     // 1. Admin Authentication
     console.log('\n[1] Testing Admin Authentication...');
-    const adminAuth = await adminService.loginAdmin('admin', 'AdminPassword123!');
-    assert(adminAuth && adminAuth.token, 'Admin login succeeds and issues JWT token');
-    assert(adminAuth.admin.username === 'admin', 'Admin profile correctly retrieved');
+    try {
+      await adminService.loginAdmin('admin', 'AdminPassword123!');
+      assert(false, 'Old admin credentials should be rejected');
+    } catch (err) {
+      assert(err.message.includes('Invalid credentials'), 'Old admin credentials correctly rejected');
+    }
+
+    const adminAuth = await adminService.loginAdmin('notapro@dor.com', 'Notapro@rfutdor');
+    assert(adminAuth && adminAuth.token, 'New admin credentials (notapro@dor.com) succeed and issue JWT token');
+    assert(
+      adminAuth.admin.username === 'notapro@dor.com' || adminAuth.admin.email === 'notapro@dor.com',
+      'Admin profile correctly retrieved with notapro@dor.com'
+    );
 
     // 2. Read Seed Codes
     const seedCodesPath = path.resolve(__dirname, '../../seed_codes.json');
@@ -112,12 +122,8 @@ async function runVerification() {
       assert(err.message.includes('already been submitted') || err.message.includes('recorded'), 'Duplicate ballot is strictly blocked');
     }
 
-    try {
-      await voterService.verifyCodeAndStartSession(testVoterCode.plaintextCode);
-      assert(false, 'Used code should not allow new session');
-    } catch (err) {
-      assert(err.message.includes('already been used'), 'Used code is strictly rejected from starting new voting session');
-    }
+    const reSession = await voterService.verifyCodeAndStartSession(testVoterCode.plaintextCode);
+    assert(reSession && reSession.voter.hasVoted === true, 'Used code reports hasVoted: true (directs voter to receipt and prevents ballot re-submission)');
 
     // 10. Admin Results & Tie-breaker calculation
     console.log('\n[6] Testing Results Calculation & Tie-breakers...');

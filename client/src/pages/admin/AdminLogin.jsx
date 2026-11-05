@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AdminAuthContext';
-import { Lock, User, Key, ArrowRight, AlertCircle } from 'lucide-react';
+import { Lock, Mail, Key, ArrowRight, AlertCircle } from 'lucide-react';
 
 export const AdminLogin = () => {
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -13,13 +13,13 @@ export const AdminLogin = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!username || !password) {
-      setErrorMsg('Please enter both username and password.');
+    if (!identifier || !password) {
+      setErrorMsg('Please enter your admin email and password.');
       return;
     }
 
     setErrorMsg('');
-    const res = await loginAdmin(username, password);
+    const res = await loginAdmin(identifier, password);
     if (res.success) {
       navigate('/admin/dashboard');
     } else {
@@ -56,19 +56,19 @@ export const AdminLogin = () => {
         <form onSubmit={handleLogin} className="space-y-4 font-sans">
           <div>
             <label className="block text-xs font-medium uppercase tracking-wider text-[#F5F0E6] mb-1.5">
-              Username
+              Admin Email / Username
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#A69D8B]">
-                <User className="w-4 h-4 text-[#D4AF57]" />
+                <Mail className="w-4 h-4 text-[#D4AF57]" />
               </div>
               <input
                 type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter admin username"
-                className="w-full pl-9 pr-3 py-2.5 bg-[#0A0907] border border-[#4A3D24] rounded-xl text-sm text-[#F5F0E6] focus:outline-none focus:border-[#D4AF57] transition-colors"
-                autoComplete="username"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="notapro@dor.com"
+                className="w-full pl-9 pr-3 py-2.5 bg-[#0A0907] border border-[#4A3D24] rounded-xl text-sm text-[#F5F0E6] focus:outline-none focus:border-[#D4AF57] transition-colors placeholder:text-stone-600"
+                autoComplete="username email"
               />
             </div>
           </div>
@@ -85,8 +85,8 @@ export const AdminLogin = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                className="w-full pl-9 pr-3 py-2.5 bg-[#0A0907] border border-[#4A3D24] rounded-xl text-sm text-[#F5F0E6] focus:outline-none focus:border-[#D4AF57] transition-colors"
+                placeholder="Enter admin password"
+                className="w-full pl-9 pr-3 py-2.5 bg-[#0A0907] border border-[#4A3D24] rounded-xl text-sm text-[#F5F0E6] focus:outline-none focus:border-[#D4AF57] transition-colors placeholder:text-stone-600"
                 autoComplete="current-password"
               />
             </div>

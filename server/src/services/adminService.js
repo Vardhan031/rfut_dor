@@ -30,12 +30,15 @@ export const updateVotingControl = async ({ isVotingOpen, resultsAnnounced, upda
   return setting;
 };
 
-export const loginAdmin = async (username, password) => {
-  if (!username || !password) {
-    throw new Error('Username and password are required.');
+export const loginAdmin = async (identifier, password) => {
+  if (!identifier || !password) {
+    throw new Error('Email/username and password are required.');
   }
 
-  const admin = await Admin.findOne({ username: username.toLowerCase().trim() });
+  const clean = identifier.toLowerCase().trim();
+  const admin = await Admin.findOne({
+    $or: [{ username: clean }, { email: clean }]
+  });
   if (!admin) {
     throw new Error('Invalid credentials.');
   }
@@ -50,6 +53,7 @@ export const loginAdmin = async (username, password) => {
     admin: {
       id: admin._id,
       username: admin.username,
+      email: admin.email || admin.username,
       createdAt: admin.createdAt
     },
     token
