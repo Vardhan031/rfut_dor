@@ -79,6 +79,7 @@ export const generateSingleCode = async ({ discordUsername, category }) => {
   const voter = await Voter.create({
     discordUsername: trimmedUsername,
     category: validCategory,
+    plaintextCode: code,
     codeHash,
     codeStatus: CODE_STATUS.ASSIGNED,
     hasVoted: false
@@ -175,13 +176,111 @@ export const getAllVoters = async ({ search = '', category = '', status = '', pa
   };
 };
 
+export const generateCodeForVoter = async (voterId) => {
+  const voter = await Voter.findById(voterId);
+  if (!voter) {
+    throw new Error('Voter not found.');
+  }
+
+  let code;
+  let codeHash;
+  let isUnique = false;
+  let attempts = 0;
+
+  while (!isUnique && attempts < 15) {
+    code = generateVotingCode();
+    codeHash = hashVotingCode(code);
+    const clash = await Voter.findOne({ codeHash, _id: { $ne: voter._id } });
+    if (!clash) {
+      isUnique = true;
+    }
+    attempts++;
+  }
+
+  if (!isUnique) {
+    throw new Error('Failed to generate a unique voting code. Please try again.');
+  }
+
+  voter.plaintextCode = code;
+  voter.codeHash = codeHash;
+  voter.codeStatus = CODE_STATUS.ASSIGNED;
+  await voter.save();
+
+  return {
+    voter: {
+      _id: voter._id,
+      discordUsername: voter.discordUsername,
+      category: voter.category,
+      codeStatus: voter.codeStatus,
+      plaintextCode: voter.plaintextCode,
+      hasVoted: voter.hasVoted,
+      votedAt: voter.votedAt,
+      createdAt: voter.createdAt
+    },
+    plaintextCode: code
+  };
+};
+
+export const deleteCodeForVoter = async (voterId) => {
+  const voter = await Voter.findById(voterId);
+  if (!voter) {
+    throw new Error('Voter not found.');
+  }
+
+  voter.plaintextCode = null;
+  voter.codeHash = null;
+  voter.codeStatus = CODE_STATUS.UNASSIGNED;
+  await voter.save();
+
+  return {
+    voter: {
+      _id: voter._id,
+      discordUsername: voter.discordUsername,
+      category: voter.category,
+      codeStatus: voter.codeStatus,
+      plaintextCode: null,
+      hasVoted: voter.hasVoted,
+      votedAt: voter.votedAt,
+      createdAt: voter.createdAt
+    }
+  };
+};
+
+export const getVoterCode = async (voterId) => {
+  const voter = await Voter.findById(voterId);
+  if (!voter) {
+    throw new Error('Voter not found.');
+  }
+
+  return {
+    voterId: voter._id,
+    discordUsername: voter.discordUsername,
+    category: voter.category,
+    plaintextCode: voter.plaintextCode,
+    codeStatus: voter.codeStatus,
+    hasVoted: voter.hasVoted,
+    votedAt: voter.votedAt
+  };
+};
+
+export const deleteVoter = async (voterId) => {
+  const voter = await Voter.findById(voterId);
+  if (!voter) {
+    throw new Error('Voter not found.');
+  }
+
+  await Voter.findByIdAndDelete(voterId);
+  return { success: true, message: `Voter "${voter.discordUsername}" deleted successfully.` };
+};
+
 export const getVotersCsvData = async () => {
   const voters = await Voter.find().sort({ discordUsername: 1 }).lean();
   return voters.map((v) => ({
     'Discord Username': v.discordUsername,
     Category: v.category,
+    'Plaintext Code': v.plaintextCode || 'N/A',
     'Code Status': v.codeStatus,
-    'Voting Status': v.hasVoted ? 'Voted' : 'Pending',
+    'Ballot Status': v.hasVoted ? 'Voted' : 'Pending',
     'Voted At': v.votedAt ? new Date(v.votedAt).toISOString() : 'N/A',
     'Created At': new Date(v.createdAt).toISOString()
   }));

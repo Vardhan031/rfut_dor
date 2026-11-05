@@ -141,3 +141,57 @@ export const exportVotersCsv = async (req, res, next) => {
     next(error);
   }
 };
+
+export const generateCodeForVoter = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await voterService.generateCodeForVoter(id);
+    res.json({
+      success: true,
+      message: `New voting code generated for ${result.voter.discordUsername}.`,
+      ...result
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteCodeForVoter = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await voterService.deleteCodeForVoter(id);
+    res.json({
+      success: true,
+      message: `Voting code removed for ${result.voter.discordUsername}.`,
+      ...result
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const getVoterCode = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await voterService.getVoterCode(id);
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    res.status(404).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteVoter = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await voterService.deleteVoter(id);
+    res.json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

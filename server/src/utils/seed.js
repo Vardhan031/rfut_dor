@@ -251,6 +251,7 @@ export const seedDatabase = async () => {
       const voterDoc = await Voter.create({
         discordUsername: v.discordUsername,
         category: v.category,
+        plaintextCode: plainCode,
         codeHash,
         codeStatus: 'Assigned',
         hasVoted: false

@@ -18,5 +18,6 @@ export const VOTER_CATEGORIES = ['Regular Member', 'Staff', 'Journo'];
 
 export const CODE_STATUS = {
   ASSIGNED: 'Assigned',
+  UNASSIGNED: 'Unassigned',
   UNUSED: 'Unused'
 };

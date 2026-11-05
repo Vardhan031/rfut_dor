@@ -15,11 +15,17 @@ const VoterSchema = new mongoose.Schema(
       default: 'Regular Member',
       required: true
     },
+    plaintextCode: {
+      type: String,
+      default: null,
+      trim: true
+    },
     codeHash: {
       type: String,
-      required: true,
+      sparse: true,
       unique: true,
-      select: false // Never return code hash in normal queries or to frontend
+      select: false,
+      default: null
     },
     codeStatus: {
       type: String,
