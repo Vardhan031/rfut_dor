@@ -166,7 +166,7 @@ const DesktopScrollStackView = ({ selectedNominees, rankings, setRankings }) => 
   };
 
   return (
-    <div className="min-h-screen text-[#F5F0E6] bg-[#070604] relative pb-48 pt-8 sm:pt-12">
+    <div className="min-h-screen text-[#F5F0E6] bg-[#070604] relative pb-48 pt-24 sm:pt-28">
       {/* Gala Atmosphere Theatrical Lighting */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[650px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#D4AF57]/14 via-[#D4AF57]/2 to-transparent blur-3xl" />
@@ -195,15 +195,6 @@ const DesktopScrollStackView = ({ selectedNominees, rankings, setRankings }) => 
                 {assignedCount} / 10
               </span>
             </div>
-
-            <button
-              type="button"
-              onClick={handleAutoFill}
-              className="px-3 py-1.5 rounded-xl border border-[#3D3321] hover:border-[#D4AF57] text-[11px] font-mono text-typography-secondary hover:text-[#E8C97B] transition-colors cursor-pointer"
-              title="Auto-populate slots based on your selection order"
-            >
-              Auto-Fill
-            </button>
 
             {assignedCount > 0 && (
               <button
@@ -575,13 +566,13 @@ const MobileDragDropView = ({ selectedNominees, rankings, setRankings }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#070604] text-[#F5F0E6] pb-32">
+    <div className="min-h-screen bg-[#070604] text-[#F5F0E6] pb-32 pt-16 sm:pt-20">
       {/* Atmospheric Glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-80 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#D4AF57]/12 via-[#D4AF57]/2 to-transparent blur-3xl" />
       </div>
 
-      <div className="relative z-10 max-w-2xl mx-auto px-4 pt-8 sm:pt-10 space-y-6">
+      <div className="relative z-10 max-w-2xl mx-auto px-4 pt-6 space-y-6">
         {/* Page Header */}
         <div className="space-y-1 pb-4 border-b border-[#2E2618]">
           <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#D4AF57] block">
