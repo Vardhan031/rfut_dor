@@ -314,13 +314,17 @@ export const ScrollStackTestPage = () => {
                       </div>
                     </div>
 
-                    {/* RIGHT HALF: Nominee Selection Dropdown (Positioned in Upper Half of Card) */}
-                    <div className="bg-[#080705]/95 p-6 sm:p-10 lg:p-12 flex flex-col justify-start items-center pt-8 sm:pt-12 lg:pt-16">
-                      <div className="w-full max-w-md space-y-3">
-                        <div className="flex items-center justify-between text-xs font-mono">
-                          <span className="text-typography-secondary uppercase tracking-widest text-[11px]">
-                            Select Nominee
-                          </span>
+                    {/* RIGHT HALF: Direct 10-Nominee Luxury Selection Grid (Zero Internal Scroll, Zero Conflict) */}
+                    <div className="bg-[#080705]/95 p-6 sm:p-8 lg:p-10 flex flex-col justify-center items-center">
+                      <div className="w-full max-w-xl space-y-3.5">
+                        {/* Header with Title and Clear Action */}
+                        <div className="flex items-center justify-between pb-2 border-b border-[#2A2317]">
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-[#D4AF57]" />
+                            <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#E8C97B]">
+                              Select Nominee for {getRankSuffix(slot.rank)}
+                            </span>
+                          </div>
                           {assignedNominee && (
                             <button
                               type="button"
@@ -333,108 +337,73 @@ export const ScrollStackTestPage = () => {
                           )}
                         </div>
 
-                        {/* Premium Custom Dropdown Trigger */}
-                        <div className="relative nominee-dropdown-wrapper">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setOpenDropdownRank(isDropdownOpen ? null : slot.rank)
-                            }
-                            className={`w-full py-4 px-5 rounded-2xl border-2 text-left font-sans transition-all duration-200 flex items-center justify-between cursor-pointer shadow-lg group ${
-                              assignedNominee
-                                ? 'bg-[#15120C] border-[#D4AF57] hover:border-[#E8C97B] hover:shadow-[0_0_30px_rgba(212,175,87,0.3)]'
-                                : 'bg-[#12100C] border-[#3D3321] hover:border-[#D4AF57]/80 hover:shadow-[0_0_25px_rgba(212,175,87,0.2)]'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3.5 min-w-0">
-                              {assignedNominee ? (
-                                <>
+                        {/* Direct 2-Column Grid of 10 Nominees (No Scrollbar Needed!) */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {NOMINEE_POOL.map((nominee) => {
+                            const assignedToRank = getAssignedRank(nominee.id);
+                            const isCurrent = assignedToRank === slot.rank;
+
+                            return (
+                              <button
+                                key={nominee.id}
+                                type="button"
+                                onClick={() => handleSelectNominee(slot.rank, nominee.id)}
+                                className={`p-2.5 sm:p-3 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between cursor-pointer group ${
+                                  isCurrent
+                                    ? 'bg-gradient-to-r from-[#D4AF57]/30 via-[#D4AF57]/15 to-transparent border-[#D4AF57] shadow-[0_0_25px_rgba(212,175,87,0.3)] ring-1 ring-[#D4AF57]'
+                                    : assignedToRank
+                                    ? 'bg-[#12100C]/60 border-[#262015] hover:border-[#554628] opacity-75'
+                                    : 'bg-[#12100C] border-[#3D3321] hover:border-[#D4AF57]/80 hover:bg-[#18140D] hover:shadow-[0_0_20px_rgba(212,175,87,0.15)]'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                                   <img
-                                    src={assignedNominee.avatar}
-                                    alt={assignedNominee.name}
-                                    className="w-9 h-9 rounded-full object-cover border border-[#D4AF57] flex-shrink-0"
+                                    src={nominee.avatar}
+                                    alt={nominee.name}
+                                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0 transition-transform duration-200 ${
+                                      isCurrent
+                                        ? 'border-2 border-[#D4AF57] scale-105 shadow-md'
+                                        : 'border border-[#554628] group-hover:border-[#D4AF57]'
+                                    }`}
                                   />
-                                  <div className="truncate">
-                                    <span className="block text-sm sm:text-base font-semibold text-typography-primary uppercase tracking-wide truncate">
-                                      {assignedNominee.name}
+                                  <div className="min-w-0">
+                                    <span
+                                      className={`block text-xs sm:text-sm font-bold uppercase tracking-wide truncate ${
+                                        isCurrent
+                                          ? 'text-[#F5F0E6]'
+                                          : 'text-typography-primary group-hover:text-[#E8C97B]'
+                                      }`}
+                                    >
+                                      {nominee.name}
                                     </span>
-                                    <span className="block text-xs font-mono text-[#D4AF57] truncate">
-                                      {assignedNominee.discord}
+                                    <span className="block text-[10px] sm:text-xs font-mono text-typography-secondary truncate">
+                                      {nominee.discord}
                                     </span>
                                   </div>
-                                </>
-                              ) : (
-                                <span className="text-sm sm:text-base text-typography-muted group-hover:text-typography-secondary font-medium">
-                                  -- Choose Nominee from Shortlist --
-                                </span>
-                              )}
-                            </div>
+                                </div>
 
-                            <ChevronDown
-                              className={`w-5 h-5 text-[#D4AF57] transition-transform duration-300 flex-shrink-0 ${
-                                isDropdownOpen ? 'rotate-180' : ''
-                              }`}
-                            />
-                          </button>
-
-                          {/* Luxury Dropdown Popup Menu */}
-                          {isDropdownOpen && (
-                            <div
-                              className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl border-2 border-[#D4AF57] bg-[#100E0A] shadow-[0_25px_60px_rgba(0,0,0,0.95)] max-h-[360px] sm:max-h-[420px] overflow-y-auto divide-y divide-[#2A2317] p-1.5"
-                              style={{ backgroundColor: '#100E0A' }}
-                            >
-                              {NOMINEE_POOL.map((nominee) => {
-                                const assignedToRank = getAssignedRank(nominee.id);
-                                const isCurrent = assignedToRank === slot.rank;
-
-                                return (
-                                  <button
-                                    key={nominee.id}
-                                    type="button"
-                                    onClick={() => handleSelectNominee(slot.rank, nominee.id)}
-                                    className={`w-full p-3 rounded-xl flex items-center justify-between text-left transition-all duration-150 cursor-pointer ${
-                                      isCurrent
-                                        ? 'bg-[#D4AF57]/20 border border-[#D4AF57]/40 text-[#E8C97B]'
-                                        : 'hover:bg-gradient-to-r hover:from-[#D4AF57]/20 hover:to-transparent text-typography-primary'
-                                    }`}
-                                  >
-                                    <div className="flex items-center gap-3 min-w-0">
-                                      <img
-                                        src={nominee.avatar}
-                                        alt={nominee.name}
-                                        className="w-10 h-10 rounded-full object-cover border border-[#554628] flex-shrink-0"
-                                      />
-                                      <div className="truncate">
-                                        <p className="text-sm font-semibold uppercase tracking-wide truncate">
-                                          {nominee.name}
-                                        </p>
-                                        <p className="text-xs font-mono text-typography-secondary truncate">
-                                          {nominee.discord}
-                                        </p>
-                                      </div>
-                                    </div>
-
-                                    {isCurrent ? (
-                                      <span className="px-2 py-0.5 rounded bg-[#D4AF57] text-[#0A0907] text-[10px] font-mono font-bold flex items-center gap-1">
-                                        <Check className="w-3 h-3" />
-                                        <span>SELECTED</span>
-                                      </span>
-                                    ) : assignedToRank ? (
-                                      <span className="text-[10px] font-mono text-typography-muted px-2 py-0.5 rounded bg-[#181510] border border-[#2A2317]">
-                                        Rank #{assignedToRank}
-                                      </span>
-                                    ) : null}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
+                                {isCurrent ? (
+                                  <span className="ml-2 px-2 py-0.5 rounded-lg bg-[#D4AF57] text-[#0A0907] text-[10px] font-mono font-black flex items-center gap-1 flex-shrink-0 shadow">
+                                    <Check className="w-3 h-3" />
+                                    <span>PICK</span>
+                                  </span>
+                                ) : assignedToRank ? (
+                                  <span className="ml-2 px-1.5 py-0.5 rounded bg-[#1A1610] border border-[#3D3321] text-[9px] font-mono text-typography-muted flex-shrink-0">
+                                    #{assignedToRank}
+                                  </span>
+                                ) : null}
+                              </button>
+                            );
+                          })}
                         </div>
 
                         {assignedNominee && (
-                          <div className="flex items-center gap-2 pt-1 text-xs font-mono text-emerald-400">
-                            <Check className="w-4 h-4 text-emerald-400" />
-                            <span>Locked into Rank #{slot.rank} (+{slot.points} Points)</span>
+                          <div className="flex items-center justify-between pt-1 text-xs font-mono">
+                            <div className="flex items-center gap-1.5 text-emerald-400">
+                              <Check className="w-3.5 h-3.5 text-emerald-400" />
+                              <span>Locked into {getRankSuffix(slot.rank)}: {assignedNominee.name}</span>
+                            </div>
+                            <span className="text-[#D4AF57] font-semibold">+{slot.points} Points</span>
                           </div>
                         )}
                       </div>
