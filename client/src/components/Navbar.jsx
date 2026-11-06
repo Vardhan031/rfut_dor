@@ -16,7 +16,7 @@ export const Navbar = () => {
   const navLinks = [
     { label: 'VOTING', path: '/' },
     { label: 'NOMINEES', path: '/nominees' },
-    { label: 'SCROLL STACK', path: '/test-scroll-stack', isNew: true },
+    ...(import.meta.env.DEV ? [{ label: 'SCROLL STACK', path: '/test-scroll-stack', isNew: true }] : []),
   ];
 
   return (
