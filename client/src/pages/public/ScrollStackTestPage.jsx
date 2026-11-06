@@ -248,31 +248,19 @@ export const ScrollStackTestPage = () => {
                   <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#2E2618]/70 relative">
                     {/* LEFT HALF: Circular PFP + Overlapping Rank Rectangle Badge + Name + Discord */}
                     <div className="bg-[#120F0A]/90 p-6 sm:p-10 flex flex-col items-center justify-center text-center">
-                      {/* Circular Avatar Container with Overlapping Rank Badge */}
+                      {/* Circular Container (Blank Minimalist Frame) with Overlapping Rank Badge */}
                       <div className="relative flex flex-col items-center">
                         <div
-                          className={`w-40 h-40 sm:w-48 sm:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden border-4 shadow-2xl flex items-center justify-center transition-all duration-300 ${
+                          className={`w-40 h-40 sm:w-48 sm:h-48 lg:w-56 lg:h-56 rounded-full border-4 shadow-2xl transition-all duration-300 ${
                             isWinner
-                              ? 'border-[#D4AF57] shadow-[0_0_45px_rgba(212,175,87,0.45)] bg-[#141008]'
+                              ? 'border-[#D4AF57] shadow-[0_0_45px_rgba(212,175,87,0.45)] bg-gradient-to-b from-[#241C0F] to-[#120E08]'
                               : isSilver
-                              ? 'border-[#CCCCCC] shadow-[0_0_35px_rgba(204,204,204,0.3)] bg-[#101010]'
+                              ? 'border-[#CCCCCC] shadow-[0_0_35px_rgba(204,204,204,0.3)] bg-gradient-to-b from-[#202020] to-[#101010]'
                               : isBronze
-                              ? 'border-[#CD7F32] shadow-[0_0_35px_rgba(205,127,50,0.35)] bg-[#120D08]'
-                              : 'border-[#3D3321] hover:border-[#554628] bg-[#0E0C08]'
+                              ? 'border-[#CD7F32] shadow-[0_0_35px_rgba(205,127,50,0.35)] bg-gradient-to-b from-[#24150A] to-[#120A05]'
+                              : 'border-[#3D3321] hover:border-[#554628] bg-gradient-to-b from-[#18140E] to-[#0C0A07]'
                           }`}
-                        >
-                          {assignedNominee ? (
-                            <img
-                              src={assignedNominee.avatar}
-                              alt={assignedNominee.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-typography-muted/30 border-2 border-dashed border-[#3D3321] rounded-full">
-                              <User className="w-16 h-16 sm:w-20 sm:h-20 text-[#554628]/40" />
-                            </div>
-                          )}
-                        </div>
+                        />
 
                         {/* Overlapping Rank Rectangle Badge (Overlapping bottom center of pfp) */}
                         <div
@@ -357,13 +345,14 @@ export const ScrollStackTestPage = () => {
                                 }`}
                               >
                                 <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                                  <img
-                                    src={nominee.avatar}
-                                    alt={nominee.name}
-                                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0 transition-transform duration-200 ${
+                                  {/* Blank Circular Placeholder */}
+                                  <div
+                                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex-shrink-0 transition-all ${
                                       isCurrent
-                                        ? 'border-2 border-[#D4AF57] scale-105 shadow-md'
-                                        : 'border border-[#554628] group-hover:border-[#D4AF57]'
+                                        ? 'bg-[#D4AF57] border-2 border-[#FFF0B3] shadow-[0_0_10px_rgba(212,175,87,0.5)]'
+                                        : assignedToRank
+                                        ? 'bg-[#2E2413] border border-[#E8C97B]/70'
+                                        : 'bg-[#18140E] border border-[#443822] group-hover:border-[#D4AF57]'
                                     }`}
                                   />
                                   <div className="min-w-0">
@@ -382,14 +371,15 @@ export const ScrollStackTestPage = () => {
                                   </div>
                                 </div>
 
+                                {/* Brighter, Prominent Rank Badge Beside Name */}
                                 {isCurrent ? (
-                                  <span className="ml-2 px-2 py-0.5 rounded-lg bg-[#D4AF57] text-[#0A0907] text-[10px] font-mono font-black flex items-center gap-1 flex-shrink-0 shadow">
-                                    <Check className="w-3 h-3" />
-                                    <span>PICK</span>
+                                  <span className="ml-2 px-2.5 py-1 rounded-xl bg-gradient-to-r from-[#FFE58F] via-[#D4AF57] to-[#B38C30] text-[#0A0907] text-xs font-mono font-black flex items-center gap-1.5 flex-shrink-0 shadow-[0_0_15px_rgba(212,175,87,0.5)] border border-[#FFF5C0]">
+                                    <Check className="w-3.5 h-3.5" />
+                                    <span>{getRankSuffix(slot.rank)}</span>
                                   </span>
                                 ) : assignedToRank ? (
-                                  <span className="ml-2 px-1.5 py-0.5 rounded bg-[#1A1610] border border-[#3D3321] text-[9px] font-mono text-typography-muted flex-shrink-0">
-                                    #{assignedToRank}
+                                  <span className="ml-2 px-2.5 py-0.5 rounded-lg bg-[#2D2313] border-2 border-[#D4AF57] text-[#FFE8A3] text-xs font-mono font-black flex items-center flex-shrink-0 shadow-[0_0_12px_rgba(212,175,87,0.4)]">
+                                    {getRankSuffix(assignedToRank)}
                                   </span>
                                 ) : null}
                               </button>
