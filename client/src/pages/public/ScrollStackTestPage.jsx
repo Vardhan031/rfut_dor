@@ -79,16 +79,16 @@ const NOMINEE_POOL = [
 
 // 10 Official Ballot Ranks in DESCENDING order (Rank 10 down to Rank 1 - Ballon d'Or Winner)
 const DESCENDING_RANKS = [
-  { rank: 10, points: 1, badge: 'ORDER OF MERIT #10', nomineeId: null },
-  { rank: 9, points: 2, badge: 'ORDER OF MERIT #9', nomineeId: null },
-  { rank: 8, points: 3, badge: 'ORDER OF MERIT #8', nomineeId: null },
-  { rank: 7, points: 4, badge: 'ORDER OF MERIT #7', nomineeId: null },
-  { rank: 6, points: 5, badge: 'ORDER OF MERIT #6', nomineeId: null },
-  { rank: 5, points: 7, badge: 'ORDER OF MERIT #5', nomineeId: null },
-  { rank: 4, points: 8, badge: 'ORDER OF MERIT #4', nomineeId: null },
-  { rank: 3, points: 10, badge: 'BRONZE PODIUM', nomineeId: null },
-  { rank: 2, points: 12, badge: 'SILVER PODIUM', nomineeId: null },
-  { rank: 1, points: 15, badge: "BALLON D'OR WINNER", nomineeId: null }
+  { rank: 10, points: 1, badge: 'RANK #10', nomineeId: null },
+  { rank: 9, points: 2, badge: 'RANK #9', nomineeId: null },
+  { rank: 8, points: 3, badge: 'RANK #8', nomineeId: null },
+  { rank: 7, points: 4, badge: 'RANK #7', nomineeId: null },
+  { rank: 6, points: 5, badge: 'RANK #6', nomineeId: null },
+  { rank: 5, points: 7, badge: 'RANK #5', nomineeId: null },
+  { rank: 4, points: 8, badge: 'RANK #4', nomineeId: null },
+  { rank: 3, points: 10, badge: 'RANK #3 (BRONZE PODIUM)', nomineeId: null },
+  { rank: 2, points: 12, badge: 'RANK #2 (SILVER PODIUM)', nomineeId: null },
+  { rank: 1, points: 15, badge: "RANK #1 (BALLON D'OR WINNER)", nomineeId: null }
 ];
 
 const getRankSuffix = (rank) => {
