@@ -91,6 +91,13 @@ const DESCENDING_RANKS = [
   { rank: 1, points: 15, badge: "BALLON D'OR WINNER", nomineeId: null }
 ];
 
+const getRankSuffix = (rank) => {
+  if (rank === 1) return '1st';
+  if (rank === 2) return '2nd';
+  if (rank === 3) return '3rd';
+  return `${rank}th`;
+};
+
 export const ScrollStackTestPage = () => {
   // Initial empty slots in descending order (10 -> 1)
   const [rankedSlots, setRankedSlots] = useState(DESCENDING_RANKS);
@@ -237,59 +244,56 @@ export const ScrollStackTestPage = () => {
                     </div>
                   </div>
 
-                  {/* Main Card Body (Grand Two-Column Split in 80vh) */}
-                  <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 p-6 sm:p-10 lg:p-12 gap-6 sm:gap-10 items-center">
-                    {/* LEFT HALF: Nominee Showcase (Pos, Photo, Name, Discord) */}
-                    <div className="flex items-center gap-6 sm:gap-10">
-                      {/* Big Position Numeral Box */}
-                      <div
-                        className={`w-20 h-20 sm:w-28 sm:h-28 rounded-3xl flex flex-col items-center justify-center font-display font-bold border flex-shrink-0 shadow-2xl ${
-                          isWinner
-                            ? 'bg-gradient-to-b from-[#D4AF57] to-[#8C6D27] text-[#0A0907] border-[#D4AF57] shadow-[0_6px_25px_rgba(212,175,87,0.5)]'
-                            : isSilver
-                            ? 'bg-gradient-to-b from-[#EAEAEA] to-[#888888] text-[#0A0907] border-[#CCCCCC]'
-                            : isBronze
-                            ? 'bg-gradient-to-b from-[#CD7F32] to-[#7A3F0E] text-[#0A0907] border-[#CD7F32]'
-                            : 'bg-[#15120D] text-[#D4AF57] border-[#3D3321]'
-                        }`}
-                      >
-                        <span className="text-[11px] sm:text-xs uppercase font-mono tracking-widest font-normal">
-                          POS
-                        </span>
-                        <span className="text-4xl sm:text-6xl leading-none font-bold">
-                          {slot.rank < 10 ? `0${slot.rank}` : slot.rank}
-                        </span>
-                      </div>
-
-                      {/* Candidate Avatar (or Empty Silhouette) */}
-                      <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-3xl overflow-hidden border-2 flex-shrink-0 shadow-2xl bg-[#070604]">
-                        {assignedNominee ? (
-                          <>
+                  {/* Main Card Body (Two-Column Split matching wireframe) */}
+                  <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#2E2618]/70 overflow-hidden">
+                    {/* LEFT HALF: Circular PFP + Overlapping Rank Rectangle Badge + Name + Discord */}
+                    <div className="bg-[#120F0A]/90 p-6 sm:p-10 flex flex-col items-center justify-center text-center">
+                      {/* Circular Avatar Container with Overlapping Rank Badge */}
+                      <div className="relative flex flex-col items-center">
+                        <div
+                          className={`w-40 h-40 sm:w-48 sm:h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden border-4 shadow-2xl flex items-center justify-center transition-all duration-300 ${
+                            isWinner
+                              ? 'border-[#D4AF57] shadow-[0_0_45px_rgba(212,175,87,0.45)] bg-[#141008]'
+                              : isSilver
+                              ? 'border-[#CCCCCC] shadow-[0_0_35px_rgba(204,204,204,0.3)] bg-[#101010]'
+                              : isBronze
+                              ? 'border-[#CD7F32] shadow-[0_0_35px_rgba(205,127,50,0.35)] bg-[#120D08]'
+                              : 'border-[#3D3321] hover:border-[#554628] bg-[#0E0C08]'
+                          }`}
+                        >
+                          {assignedNominee ? (
                             <img
                               src={assignedNominee.avatar}
                               alt={assignedNominee.name}
                               className="w-full h-full object-cover"
                             />
-                            {isWinner && (
-                              <div className="absolute top-2 right-2 p-1.5 rounded-full bg-[#D4AF57] text-[#0A0907] shadow-lg">
-                                <Trophy className="w-4 h-4" />
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-typography-muted/30 border-2 border-dashed border-[#3D3321]">
-                            <User className="w-12 h-12 text-[#554628]/40" />
-                          </div>
-                        )}
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-typography-muted/30 border-2 border-dashed border-[#3D3321] rounded-full">
+                              <User className="w-16 h-16 sm:w-20 sm:h-20 text-[#554628]/40" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Overlapping Rank Rectangle Badge (Overlapping bottom center of pfp) */}
+                        <div
+                          className={`absolute -bottom-4 sm:-bottom-5 left-1/2 -translate-x-1/2 px-6 sm:px-8 py-1.5 sm:py-2 rounded-2xl font-display font-black text-base sm:text-xl tracking-wide shadow-2xl flex items-center justify-center min-w-[76px] sm:min-w-[92px] z-10 ${
+                            isWinner
+                              ? 'bg-gradient-to-r from-[#FFE58F] via-[#D4AF57] to-[#B38C30] text-[#0A0907] border-2 border-[#FFF2B2] shadow-[0_6px_25px_rgba(212,175,87,0.6)]'
+                              : isSilver
+                              ? 'bg-gradient-to-r from-[#FFFFFF] via-[#CCCCCC] to-[#999999] text-[#0A0907] border-2 border-[#FFFFFF] shadow-[0_6px_20px_rgba(204,204,204,0.45)]'
+                              : isBronze
+                              ? 'bg-gradient-to-r from-[#F5B041] via-[#CD7F32] to-[#8C4614] text-[#0A0907] border-2 border-[#FAD7A0] shadow-[0_6px_20px_rgba(205,127,50,0.5)]'
+                              : 'bg-gradient-to-b from-[#2A2317] to-[#18140D] border-2 border-[#D4AF57]/60 text-[#E8C97B] shadow-[0_4px_15px_rgba(0,0,0,0.6)]'
+                          }`}
+                        >
+                          {getRankSuffix(slot.rank)}
+                        </div>
                       </div>
 
-                      {/* Candidate Display Name and Discord Tag (Strictly NO descriptions/stats) */}
-                      <div className="flex-1 min-w-0 space-y-1.5">
+                      {/* Username and Discord Username (Directly Under the PFP) */}
+                      <div className="mt-8 sm:mt-9 space-y-1 max-w-sm sm:max-w-md">
                         {assignedNominee ? (
                           <>
-                            <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#D4AF57] block">
-                              Ranked Candidate
-                            </span>
                             <h2 className="font-playfair text-2xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-wider text-typography-primary leading-tight truncate">
                               {assignedNominee.name}
                             </h2>
@@ -299,23 +303,20 @@ export const ScrollStackTestPage = () => {
                           </>
                         ) : (
                           <>
-                            <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-typography-muted block">
-                              Rank #{slot.rank}
-                            </span>
-                            <h2 className="font-playfair text-xl sm:text-3xl font-bold uppercase tracking-wider text-typography-muted/60 italic">
+                            <h2 className="font-playfair text-xl sm:text-3xl font-bold uppercase tracking-wider text-typography-muted/50 italic">
                               Unassigned
                             </h2>
-                            <p className="text-xs sm:text-sm font-sans text-typography-muted">
-                              Choose a candidate on the right &rarr;
+                            <p className="font-mono text-xs sm:text-sm text-typography-muted">
+                              Select a nominee on the right &rarr;
                             </p>
                           </>
                         )}
                       </div>
                     </div>
 
-                    {/* RIGHT HALF: Ultra-Premium Custom Luxury Dropdown */}
-                    <div className="flex flex-col justify-center items-stretch lg:items-end relative">
-                      <div className="w-full max-w-md space-y-2">
+                    {/* RIGHT HALF: Nominee Selection Dropdown (Centered Vertically) */}
+                    <div className="bg-[#080705]/95 p-6 sm:p-10 flex flex-col justify-center items-center">
+                      <div className="w-full max-w-md space-y-3">
                         <div className="flex items-center justify-between text-xs font-mono">
                           <span className="text-typography-secondary uppercase tracking-widest text-[11px]">
                             Select Nominee
@@ -351,7 +352,7 @@ export const ScrollStackTestPage = () => {
                                   <img
                                     src={assignedNominee.avatar}
                                     alt={assignedNominee.name}
-                                    className="w-9 h-9 rounded-xl object-cover border border-[#D4AF57] flex-shrink-0"
+                                    className="w-9 h-9 rounded-full object-cover border border-[#D4AF57] flex-shrink-0"
                                   />
                                   <div className="truncate">
                                     <span className="block text-sm sm:text-base font-semibold text-typography-primary uppercase tracking-wide truncate">
@@ -401,7 +402,7 @@ export const ScrollStackTestPage = () => {
                                       <img
                                         src={nominee.avatar}
                                         alt={nominee.name}
-                                        className="w-10 h-10 rounded-xl object-cover border border-[#554628] flex-shrink-0"
+                                        className="w-10 h-10 rounded-full object-cover border border-[#554628] flex-shrink-0"
                                       />
                                       <div className="truncate">
                                         <p className="text-sm font-semibold uppercase tracking-wide truncate">
