@@ -294,11 +294,14 @@ export const CircularCarousel = forwardRef((
   const readyRef = useRef(false);
   readyRef.current = ready;
 
+  const dragSign = layout.inward ? -1 : 1;
+  const directionSign = (direction === 'right' ? 1 : -1) * dragSign;
+
   const stateRef = useRef({
     angle: 0,
     velocity: 0,
     target: null,
-    dir: 0,
+    dir: directionSign,
     press: null,
     drag: false,
     hover: false,
@@ -327,16 +330,16 @@ export const CircularCarousel = forwardRef((
     perspective: layout.inward ? radius : (perspective ?? layout.perspective),
     cardW,
     cardH,
-    intro: reduced ? 'none' : intro in INTRO_LENGTH ? intro : 'rise',
-    autoplay: reduced ? 'off' : autoplay,
+    intro: intro in INTRO_LENGTH ? intro : 'rise',
+    autoplay: autoplay,
     speed,
     interval: Math.max(0.5, interval),
     draggable,
     momentum: clamp(momentum, 0, 1),
     snap,
     pauseOnHover,
-    parallax: reduced ? 0 : clamp(parallax, 0, 1),
-    stretch: reduced ? 0 : clamp(stretch, 0, 1),
+    parallax: clamp(parallax, 0, 1),
+    stretch: clamp(stretch, 0, 1),
     depthFade: clamp(depthFade, 0, 1),
     captions,
     spotlight,
@@ -349,9 +352,6 @@ export const CircularCarousel = forwardRef((
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
-  const dragSign = layout.inward ? -1 : 1;
-  const directionSign = (direction === 'right' ? 1 : -1) * dragSign;
-
   useEffect(() => {
     stateRef.current.dir = directionSign;
     wakeRef.current();
@@ -361,7 +361,7 @@ export const CircularCarousel = forwardRef((
   incomingRef.current = incoming;
   const listRef = useRef(list);
   listRef.current = list;
-  const sourcesKey = incoming.map(item => item.src).join('|');
+  const sourcesKey = incoming.map(item => item.src || item.title || item.rank || '').join('|');
 
   useEffect(() => {
     let cancelled = false;
@@ -372,7 +372,14 @@ export const CircularCarousel = forwardRef((
       setLeaving(null);
       setList(next);
     }
-    const sources = next.slice(0, 16).map(item => item.src);
+    const sources = next.slice(0, 16).map(item => item.src).filter(Boolean);
+    if (sources.length === 0) {
+      stateRef.current.introDone = false;
+      stateRef.current.intro = null;
+      setReady(true);
+      wakeRef.current();
+      return;
+    }
     const load = src =>
       new Promise(resolve => {
         const image = new Image();
@@ -688,7 +695,7 @@ export const CircularCarousel = forwardRef((
         raf = 0;
         state.last = 0;
       }
-    });
+    }, { threshold: 0, rootMargin: '200px' });
     io.observe(root);
 
     const onWheel = event => {
@@ -757,7 +764,8 @@ export const CircularCarousel = forwardRef((
   useImperativeHandle(forwardedRef, () => ({
     focusIndex,
     stepBy,
-    getActiveIndex: () => activeRef.current
+    getActiveIndex: () => activeRef.current,
+    wake: () => wakeRef.current()
   }), [focusIndex, stepBy]);
 
   const updatePointer = event => {

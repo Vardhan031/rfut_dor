@@ -31,7 +31,15 @@ export const ConfirmationPage = () => {
     window.scrollTo({ top: 0, behavior: 'instant' });
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    // Give the carousel a moment to mount and paint before its IO fires,
+    // then nudge it awake in case the IO callback missed the initial intersection.
+    const wakeTimer = setTimeout(() => {
+      carouselRef.current?.wake();
+    }, 120);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(wakeTimer);
+    };
   }, []);
 
   const isMobile = windowWidth < 640;
@@ -149,7 +157,7 @@ export const ConfirmationPage = () => {
               intro="rise"
               cardWidth={isMobile ? 165 : 200}
               aspectRatio={0.62}
-              speed={18}
+              speed={22}
               captions={false}
               gap={isMobile ? 18 : 22}
               tilt={-4}
@@ -160,7 +168,7 @@ export const ConfirmationPage = () => {
               direction="left"
               momentum={0.65}
               snap
-              pauseOnHover
+              pauseOnHover={false}
               focusOnClick
               draggable
               parallax={0.25}
