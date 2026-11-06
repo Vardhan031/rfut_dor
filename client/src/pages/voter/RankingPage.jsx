@@ -1,7 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useVoterAuth } from '../../context/VoterAuthContext';
 import { ScrollStack, ScrollStackItem } from '../../components/ui/scroll-stack';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { SortableNomineeItem } from '../../components/SortableNomineeItem';
 import {
   Trophy,
   Crown,
@@ -11,22 +27,27 @@ import {
   ArrowLeft,
   ArrowRight,
   ShieldCheck,
-  RotateCcw
+  RotateCcw,
+  GripVertical,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-// 10 Official Ballot Ranks in DESCENDING order (Rank 10 down to Rank 1 - Ballon d'Or Winner)
+// ─────────────────────────────────────────────────────────────────────────────
+// Constants
+// ─────────────────────────────────────────────────────────────────────────────
+
+// 10 Official Ballot Ranks in DESCENDING order (Rank 10 → Rank 1 Ballon d'Or Winner)
 const DESCENDING_RANKS = [
-  { rank: 10, points: 1, badge: 'RANK #10', nomineeId: null },
-  { rank: 9, points: 2, badge: 'RANK #9', nomineeId: null },
-  { rank: 8, points: 3, badge: 'RANK #8', nomineeId: null },
-  { rank: 7, points: 4, badge: 'RANK #7', nomineeId: null },
-  { rank: 6, points: 5, badge: 'RANK #6', nomineeId: null },
-  { rank: 5, points: 7, badge: 'RANK #5', nomineeId: null },
-  { rank: 4, points: 8, badge: 'RANK #4', nomineeId: null },
-  { rank: 3, points: 10, badge: 'RANK #3 (BRONZE PODIUM)', nomineeId: null },
-  { rank: 2, points: 12, badge: 'RANK #2 (SILVER PODIUM)', nomineeId: null },
-  { rank: 1, points: 15, badge: "RANK #1 (BALLON D'OR WINNER)", nomineeId: null }
+  { rank: 10, points: 1,  badge: 'RANK #10',                   nomineeId: null },
+  { rank: 9,  points: 2,  badge: 'RANK #9',                    nomineeId: null },
+  { rank: 8,  points: 3,  badge: 'RANK #8',                    nomineeId: null },
+  { rank: 7,  points: 4,  badge: 'RANK #7',                    nomineeId: null },
+  { rank: 6,  points: 5,  badge: 'RANK #6',                    nomineeId: null },
+  { rank: 5,  points: 7,  badge: 'RANK #5',                    nomineeId: null },
+  { rank: 4,  points: 8,  badge: 'RANK #4',                    nomineeId: null },
+  { rank: 3,  points: 10, badge: 'RANK #3 (BRONZE PODIUM)',    nomineeId: null },
+  { rank: 2,  points: 12, badge: 'RANK #2 (SILVER PODIUM)',    nomineeId: null },
+  { rank: 1,  points: 15, badge: "RANK #1 (BALLON D'OR WINNER)", nomineeId: null },
 ];
 
 const getRankSuffix = (rank) => {
@@ -36,34 +57,51 @@ const getRankSuffix = (rank) => {
   return `${rank}th`;
 };
 
-export const RankingPage = () => {
-  const { voter, selectedNominees, rankings, setRankings } = useVoterAuth();
+// ─────────────────────────────────────────────────────────────────────────────
+// Hook: detect if window is >= 1024px (desktop / lg breakpoint)
+// ─────────────────────────────────────────────────────────────────────────────
+const useIsDesktop = () => {
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 1024 : false
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handler = (e) => setIsDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    setIsDesktop(mq.matches);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  return isDesktop;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sub-components
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MedalBadge = ({ rank }) => (
+  <span
+    className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+      rank === 2 ? 'bg-[#CCCCCC] text-[#0A0907]' : 'bg-[#CD7F32] text-[#0A0907]'
+    }`}
+  >
+    {rank}
+  </span>
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DESKTOP VIEW — Scroll Stack (lg and above)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const DesktopScrollStackView = ({ selectedNominees, rankings, setRankings }) => {
   const navigate = useNavigate();
 
-  // Voter authentication guards
-  if (!voter) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (voter.hasVoted) {
-    return <Navigate to="/vote/success" replace />;
-  }
-
-  // Voter must have selected exactly 10 nominees
-  if (!selectedNominees || selectedNominees.length !== 10) {
-    return <Navigate to="/vote/select" replace />;
-  }
-
-  // Initialize slots
   const [rankedSlots, setRankedSlots] = useState(() => {
-    // If voter already had ranked them in this session, pre-populate
     if (rankings && rankings.length === 10) {
       return DESCENDING_RANKS.map((slot) => {
         const matchingNominee = rankings[slot.rank - 1];
-        return {
-          ...slot,
-          nomineeId: matchingNominee?._id || null
-        };
+        return { ...slot, nomineeId: matchingNominee?._id || null };
       });
     }
     return DESCENDING_RANKS;
@@ -72,13 +110,8 @@ export const RankingPage = () => {
   const handleSelectNominee = (rankNumber, selectedId) => {
     setRankedSlots((prev) =>
       prev.map((slot) => {
-        if (slot.rank === rankNumber) {
-          return { ...slot, nomineeId: selectedId || null };
-        }
-        // If nominee was assigned elsewhere, clear previous to prevent duplicate vote
-        if (selectedId && slot.nomineeId === selectedId) {
-          return { ...slot, nomineeId: null };
-        }
+        if (slot.rank === rankNumber) return { ...slot, nomineeId: selectedId || null };
+        if (selectedId && slot.nomineeId === selectedId) return { ...slot, nomineeId: null };
         return slot;
       })
     );
@@ -92,9 +125,9 @@ export const RankingPage = () => {
 
   const handleAutoFill = () => {
     setRankedSlots(
-      DESCENDING_RANKS.map((slot, idx) => ({
+      DESCENDING_RANKS.map((slot) => ({
         ...slot,
-        nomineeId: selectedNominees[10 - slot.rank]?._id || null
+        nomineeId: selectedNominees[10 - slot.rank]?._id || null,
       }))
     );
     toast.success('Ranks auto-populated from selection order.');
@@ -118,22 +151,16 @@ export const RankingPage = () => {
       toast.warning('Please assign all 10 ranks before proceeding.');
       return;
     }
-
-    // Construct final rankings in order from Rank 1 down to Rank 10
     const finalRanked = [];
     for (let r = 1; r <= 10; r++) {
       const slot = rankedSlots.find((s) => s.rank === r);
       const nominee = selectedNominees.find((n) => n._id === slot.nomineeId);
-      if (nominee) {
-        finalRanked.push(nominee);
-      }
+      if (nominee) finalRanked.push(nominee);
     }
-
     if (finalRanked.length !== 10) {
       toast.error('Incomplete ranking list. Please assign all 10 ranks.');
       return;
     }
-
     setRankings(finalRanked);
     navigate('/vote/confirm');
   };
@@ -199,7 +226,7 @@ export const RankingPage = () => {
           </div>
         </div>
 
-        {/* THE 92vw FLOATING SCROLL STACK (100% Solid Opaque, Descending 10 -> 1) */}
+        {/* THE 92vw FLOATING SCROLL STACK (Descending Rank 10 → 1) */}
         <ScrollStack
           itemDistance={56}
           topOffset="calc(5rem + 28px)"
@@ -234,7 +261,7 @@ export const RankingPage = () => {
                       ? '#0D0D0D'
                       : isBronze
                       ? '#0E0B08'
-                      : '#0C0A07'
+                      : '#0C0A07',
                   }}
                 >
                   {/* Luxury Card Header Bar */}
@@ -278,11 +305,10 @@ export const RankingPage = () => {
                     </div>
                   </div>
 
-                  {/* Main Card Body (Two-Column Split matching wireframe) */}
-                  <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#2E2618]/70 relative">
-                    {/* LEFT HALF: Blank Circular Frame + Overlapping Rank Rectangle Badge + Name + Discord */}
+                  {/* Main Card Body (Two-Column Split) */}
+                  <div className="flex-1 grid grid-cols-2 divide-x divide-[#2E2618]/70 relative">
+                    {/* LEFT HALF: Blank Circular Frame + Overlapping Rank Badge + Name + Discord */}
                     <div className="bg-[#120F0A]/90 p-6 sm:p-10 flex flex-col items-center justify-center text-center">
-                      {/* Circular Container (Blank Minimalist Frame) with Overlapping Rank Badge */}
                       <div className="relative flex flex-col items-center">
                         <div
                           className={`w-40 h-40 sm:w-48 sm:h-48 lg:w-56 lg:h-56 rounded-full border-4 shadow-2xl transition-all duration-300 ${
@@ -296,7 +322,7 @@ export const RankingPage = () => {
                           }`}
                         />
 
-                        {/* Overlapping Rank Rectangle Badge (Overlapping bottom center of circle) */}
+                        {/* Overlapping Rank Rectangle Badge */}
                         <div
                           className={`absolute -bottom-4 sm:-bottom-5 left-1/2 -translate-x-1/2 px-6 sm:px-8 py-1.5 sm:py-2 rounded-2xl font-display font-black text-base sm:text-xl tracking-wide shadow-2xl flex items-center justify-center min-w-[76px] sm:min-w-[92px] z-10 ${
                             isWinner
@@ -312,7 +338,7 @@ export const RankingPage = () => {
                         </div>
                       </div>
 
-                      {/* Username and Discord Username (Directly Under the PFP - Full Visibility) */}
+                      {/* Username and Discord Username */}
                       <div className="mt-8 sm:mt-9 space-y-1 w-full max-w-xl px-4">
                         {assignedNominee ? (
                           <>
@@ -336,10 +362,10 @@ export const RankingPage = () => {
                       </div>
                     </div>
 
-                    {/* RIGHT HALF: Direct 10-Nominee Luxury Selection Grid (Zero Internal Scroll, Zero Conflict) */}
+                    {/* RIGHT HALF: Direct 10-Nominee Selection Grid (No Internal Scroll) */}
                     <div className="bg-[#080705]/95 p-6 sm:p-8 lg:p-10 flex flex-col justify-center items-center">
                       <div className="w-full max-w-xl space-y-3.5">
-                        {/* Header with Title and Clear Action */}
+                        {/* Header */}
                         <div className="flex items-center justify-between pb-2 border-b border-[#2A2317]">
                           <div className="flex items-center gap-2">
                             <Sparkles className="w-4 h-4 text-[#D4AF57]" />
@@ -359,8 +385,8 @@ export const RankingPage = () => {
                           )}
                         </div>
 
-                        {/* Direct 2-Column Grid of 10 Selected Nominees */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {/* 2-Column Grid */}
+                        <div className="grid grid-cols-2 gap-2.5">
                           {selectedNominees.map((nominee) => {
                             const assignedToRank = getAssignedRank(nominee._id);
                             const isCurrent = assignedToRank === slot.rank;
@@ -405,7 +431,7 @@ export const RankingPage = () => {
                                   </div>
                                 </div>
 
-                                {/* Brighter, Prominent Rank Badge Beside Name */}
+                                {/* Rank Badge */}
                                 {isCurrent ? (
                                   <span className="ml-2 px-2.5 py-1 rounded-xl bg-gradient-to-r from-[#FFE58F] via-[#D4AF57] to-[#B38C30] text-[#0A0907] text-xs font-mono font-black flex items-center gap-1.5 flex-shrink-0 shadow-[0_0_15px_rgba(212,175,87,0.5)] border border-[#FFF5C0]">
                                     <Check className="w-3.5 h-3.5" />
@@ -425,7 +451,10 @@ export const RankingPage = () => {
                           <div className="flex items-center justify-between pt-1 text-xs font-mono">
                             <div className="flex items-center gap-1.5 text-emerald-400">
                               <Check className="w-3.5 h-3.5 text-emerald-400" />
-                              <span>Locked into {getRankSuffix(slot.rank)}: {assignedNominee.displayName || assignedNominee.name}</span>
+                              <span>
+                                Locked into {getRankSuffix(slot.rank)}:{' '}
+                                {assignedNominee.displayName || assignedNominee.name}
+                              </span>
                             </div>
                             <span className="text-[#D4AF57] font-semibold">+{slot.points} Points</span>
                           </div>
@@ -434,7 +463,7 @@ export const RankingPage = () => {
                     </div>
                   </div>
 
-                  {/* Bottom Minimal Accent Line */}
+                  {/* Bottom Accent Line */}
                   <div
                     className={`h-1.5 w-full ${
                       isWinner
@@ -452,20 +481,18 @@ export const RankingPage = () => {
           })}
         </ScrollStack>
 
-        {/* Milestone Submission Card (When all 10 are chosen) */}
+        {/* Submission / Progress Footer */}
         {allAssigned ? (
           <div className="mt-20 p-8 sm:p-12 rounded-3xl bg-[#0E0C08] border-2 border-[#D4AF57] text-center w-[92vw] max-w-[1550px] mx-auto space-y-4 shadow-[0_20px_70px_rgba(212,175,87,0.35)] animate-fadeIn">
             <div className="w-16 h-16 mx-auto rounded-full bg-[#D4AF57]/15 border border-[#D4AF57] flex items-center justify-center text-[#D4AF57] shadow-xl">
               <Trophy className="w-8 h-8" />
             </div>
-
             <h3 className="font-playfair text-3xl sm:text-4xl font-bold uppercase tracking-wider text-typography-primary">
               All 10 Positions Sealed
             </h3>
             <p className="text-sm text-typography-secondary font-sans max-w-md mx-auto">
               Total 67 points allocated across all 10 positions in your Order of Merit.
             </p>
-
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 to="/vote/select"
@@ -493,15 +520,195 @@ export const RankingPage = () => {
   );
 };
 
-const MedalBadge = ({ rank }) => {
+// ─────────────────────────────────────────────────────────────────────────────
+// MOBILE VIEW — Drag & Drop (below lg / < 1024px)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MobileDragDropView = ({ selectedNominees, rankings, setRankings }) => {
+  const navigate = useNavigate();
+
+  // Local sorted list — initialised from context rankings or selected order
+  const [localRankings, setLocalRankings] = useState(() => {
+    if (rankings && rankings.length === 10) return [...rankings];
+    return [...selectedNominees];
+  });
+
+  // Keep context rankings in sync so desktop view also sees changes
+  useEffect(() => {
+    setRankings(localRankings);
+  }, [localRankings, setRankings]);
+
+  // ── DnD Kit Sensors (Pointer + Touch + Keyboard)
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = ({ active, over }) => {
+    if (!over || active.id === over.id) return;
+    setLocalRankings((prev) => {
+      const oldIdx = prev.findIndex((n) => n._id === active.id);
+      const newIdx = prev.findIndex((n) => n._id === over.id);
+      return arrayMove(prev, oldIdx, newIdx);
+    });
+  };
+
+  const moveUp = (idx) => {
+    if (idx === 0) return;
+    setLocalRankings((prev) => arrayMove(prev, idx, idx - 1));
+  };
+
+  const moveDown = (idx) => {
+    if (idx === localRankings.length - 1) return;
+    setLocalRankings((prev) => arrayMove(prev, idx, idx + 1));
+  };
+
+  const removeNominee = (nomineeId) => {
+    // On mobile we don't remove — just show a toast guiding them back
+    toast.info('Go back to Change Candidates to modify your top 10 list.');
+  };
+
+  const handleReviewBallot = () => {
+    setRankings(localRankings);
+    navigate('/vote/confirm');
+  };
+
   return (
-    <span
-      className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
-        rank === 2 ? 'bg-[#CCCCCC] text-[#0A0907]' : 'bg-[#CD7F32] text-[#0A0907]'
-      }`}
-    >
-      {rank}
-    </span>
+    <div className="min-h-screen bg-[#070604] text-[#F5F0E6] pb-32">
+      {/* Atmospheric Glow */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-80 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#D4AF57]/12 via-[#D4AF57]/2 to-transparent blur-3xl" />
+      </div>
+
+      <div className="relative z-10 max-w-2xl mx-auto px-4 pt-8 sm:pt-10 space-y-6">
+        {/* Page Header */}
+        <div className="space-y-1 pb-4 border-b border-[#2E2618]">
+          <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#D4AF57] block">
+            STAGE 2 OF 3 &bull; ORDER OF MERIT
+          </span>
+          <h1 className="font-playfair text-2xl sm:text-3xl font-bold uppercase tracking-wide text-typography-primary">
+            Rank Your Top 10
+          </h1>
+          <p className="text-xs text-typography-secondary font-sans">
+            Drag to reorder · Rank 1 earns +15 pts (Ballon d'Or Winner), Rank 10 earns +1 pt.
+          </p>
+        </div>
+
+        {/* Action Bar */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <Link
+            to="/vote/select"
+            className="px-3 py-1.5 rounded-xl border border-[#3D3321] hover:border-[#D4AF57] text-[11px] font-mono text-typography-secondary hover:text-typography-primary transition-colors flex items-center gap-1"
+          >
+            <ArrowLeft className="w-3 h-3" />
+            <span>Change Candidates</span>
+          </Link>
+
+          <button
+            type="button"
+            onClick={handleReviewBallot}
+            className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0A0907] font-bold text-[11px] uppercase tracking-widest transition-all shadow-[0_4px_20px_rgba(212,175,87,0.4)] cursor-pointer flex items-center gap-2"
+          >
+            <span>Review Final Ballot</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Points Legend */}
+        <div className="grid grid-cols-5 gap-1.5 p-3 rounded-2xl bg-[#0C0A07] border border-[#2E2618] text-center">
+          {[
+            { label: '1st', pts: 15 },
+            { label: '2nd', pts: 12 },
+            { label: '3rd', pts: 10 },
+            { label: '4th', pts: 8 },
+            { label: '5th', pts: 7 },
+            { label: '6th', pts: 5 },
+            { label: '7th', pts: 4 },
+            { label: '8th', pts: 3 },
+            { label: '9th', pts: 2 },
+            { label: '10th', pts: 1 },
+          ].map(({ label, pts }) => (
+            <div key={label} className="space-y-0.5">
+              <div className="text-[9px] font-mono text-typography-muted uppercase">{label}</div>
+              <div className="text-[10px] font-mono text-[#D4AF57] font-bold">+{pts}p</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Sortable Drag List */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={localRankings.map((n) => n._id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-2">
+              {localRankings.map((nominee, idx) => (
+                <SortableNomineeItem
+                  key={nominee._id}
+                  id={nominee._id}
+                  nominee={nominee}
+                  rank={idx + 1}
+                  onMoveUp={() => moveUp(idx)}
+                  onMoveDown={() => moveDown(idx)}
+                  onRemove={() => removeNominee(nominee._id)}
+                  isFirst={idx === 0}
+                  isLast={idx === localRankings.length - 1}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+
+        {/* Bottom CTA */}
+        <div className="pt-4 pb-8">
+          <button
+            type="button"
+            onClick={handleReviewBallot}
+            className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0A0907] font-bold text-sm uppercase tracking-widest transition-all shadow-[0_4px_25px_rgba(212,175,87,0.45)] cursor-pointer flex items-center justify-center gap-2"
+          >
+            <Trophy className="w-4 h-4" />
+            <span>Review Final Ballot</span>
+          </button>
+          <p className="text-center text-[10px] font-mono text-typography-muted mt-3">
+            Drag nominees to set your preferred order · Top of list = Rank 1
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main RankingPage — renders correct view based on screen width
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const RankingPage = () => {
+  const { voter, selectedNominees, rankings, setRankings } = useVoterAuth();
+  const isDesktop = useIsDesktop();
+
+  // Voter auth guards
+  if (!voter) return <Navigate to="/" replace />;
+  if (voter.hasVoted) return <Navigate to="/vote/success" replace />;
+  if (!selectedNominees || selectedNominees.length !== 10)
+    return <Navigate to="/vote/select" replace />;
+
+  return isDesktop ? (
+    <DesktopScrollStackView
+      selectedNominees={selectedNominees}
+      rankings={rankings}
+      setRankings={setRankings}
+    />
+  ) : (
+    <MobileDragDropView
+      selectedNominees={selectedNominees}
+      rankings={rankings}
+      setRankings={setRankings}
+    />
   );
 };
 
