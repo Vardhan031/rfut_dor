@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useVoterAuth } from '../context/VoterAuthContext';
 import { useAdminAuth } from '../context/AdminAuthContext';
@@ -10,26 +10,47 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Track scroll position to trigger glassmorphism
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll(); // set correct initial value
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const navLinks = [
     { label: 'VOTING', path: '/' },
     { label: 'NOMINEES', path: '/nominees' },
   ];
 
+  // ── Navbar class logic ──────────────────────────────────────────────────────
+  // Admin routes: always solid dark background
+  // Public routes:
+  //   • At top (not scrolled): transparent, no border
+  //   • Scrolled: glassmorphism — blurred dark panel + gold bottom border
+  const headerClass = isAdminRoute
+    ? 'bg-[#0A0907]/95 backdrop-blur-md border-b border-[#2A2317]'
+    : scrolled
+    ? [
+        'bg-[#0A0907]/70',
+        'backdrop-blur-xl',
+        'border-b border-[#D4AF57]/20',
+        'shadow-[0_4px_30px_rgba(0,0,0,0.6),0_1px_0_rgba(212,175,87,0.08)_inset]',
+        'supports-[backdrop-filter]:bg-[#0A0907]/55',
+      ].join(' ')
+    : 'bg-transparent border-b border-transparent';
+
   return (
     <header
-      className={`sticky top-0 z-50 transition-colors ${
-        isAdminRoute
-          ? 'bg-[#0A0907]/95 backdrop-blur-md border-b border-[#2A2317]'
-          : 'bg-[#0A0907]/60 md:bg-transparent backdrop-blur-md md:backdrop-blur-none border-b border-[#2A2317]/50 md:border-transparent'
-      }`}
+      className={`sticky top-0 z-50 transition-all duration-300 ease-in-out ${headerClass}`}
     >
       <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
-        {/* Left: Brand with Realistic Ballon d'Or Trophy Icon */}
+        {/* Left: Brand */}
         <Link to="/" className="flex items-center gap-2.5 sm:gap-3.5 group">
-          {/* Realistic 3D Luxury Ballon d'Or Trophy Emblem */}
           <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0 bg-[#0A0907]/80 border border-[#554628] p-0.5 shadow-[0_2px_14px_rgba(212,175,87,0.35)] group-hover:border-[#D4AF57] transition-all">
             <img
               src="/assets/rfut_dor_trophy_logo.jpg"
@@ -53,7 +74,7 @@ export const Navbar = () => {
           </div>
         </Link>
 
-        {/* Center: Main Navigation (VOTING | NOMINEES) */}
+        {/* Center: Main Navigation */}
         {!isAdminRoute && (
           <nav className="hidden md:flex items-center gap-10">
             {navLinks.map((link) => {
@@ -91,9 +112,8 @@ export const Navbar = () => {
           </nav>
         )}
 
-        {/* Right Actions: Voter Session / Admin Access */}
+        {/* Right Actions */}
         <div className="hidden md:flex items-center gap-5">
-          {/* Active Voter Session */}
           {voter && !isAdminRoute && (
             <div className="flex items-center gap-3 pr-2 border-r border-[#3D3321]">
               <div className="flex flex-col text-right">
@@ -114,7 +134,6 @@ export const Navbar = () => {
             </div>
           )}
 
-          {/* Admin Login / Logout */}
           {isAdminRoute ? (
             admin ? (
               <div className="flex items-center gap-3">
