@@ -3,18 +3,17 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 export const ScrollStackItem = ({
   children,
   index = 0,
-  topOffset = 90,
-  stackOffset = 28,
-  totalItems = 10,
+  topOffset = '10vh',
+  stackOffset = 32,
   className = '',
   style = {}
 }) => {
   return (
     <div
-      className={`scroll-stack-card sticky transition-all duration-300 will-change-transform ${className}`.trim()}
+      className={`scroll-stack-card sticky transition-transform duration-300 will-change-transform ${className}`.trim()}
       style={{
-        top: `${topOffset + index * stackOffset}px`,
-        zIndex: 10 + index,
+        top: `calc(${topOffset} + ${index * stackOffset}px)`,
+        zIndex: 10 + index * 5,
         ...style
       }}
     >
@@ -26,16 +25,13 @@ export const ScrollStackItem = ({
 export const ScrollStack = ({
   children,
   className = '',
-  itemDistance = 48,
-  topOffset = 100,
-  stackOffset = 26,
-  scaleStep = 0.025,
-  blurStep = 1.5,
-  fadeStep = 0.1,
+  itemDistance = 64,
+  topOffset = '10vh',
+  stackOffset = 32,
+  scaleStep = 0.02,
   onStackComplete
 }) => {
   const containerRef = useRef(null);
-  const [activeCardIndex, setActiveCardIndex] = useState(0);
 
   const handleScroll = useCallback(() => {
     if (!containerRef.current) return;
@@ -43,44 +39,37 @@ export const ScrollStack = ({
     const cards = containerRef.current.querySelectorAll('.scroll-stack-card');
     if (!cards || cards.length === 0) return;
 
+    // Get current top card index
     let currentTop = 0;
     cards.forEach((card, i) => {
       const rect = card.getBoundingClientRect();
-      const stickyThreshold = topOffset + i * stackOffset;
+      const topOffsetPx = (window.innerHeight * 10) / 100 + i * stackOffset;
 
-      // Card is currently pinned at the top
-      if (rect.top <= stickyThreshold + 2) {
+      if (rect.top <= topOffsetPx + 4) {
         currentTop = i;
       }
     });
 
-    setActiveCardIndex(currentTop);
-
-    // Apply smooth scaling, depth blur, and opacity to stacked cards
+    // Apply scaling ONLY to stacked cards without any transparency/opacity reduction
     cards.forEach((card, i) => {
       const depth = currentTop - i;
       if (depth > 0) {
-        // Card is behind the current top card
-        const scale = Math.max(0.78, 1 - depth * scaleStep);
-        const blur = Math.min(6, depth * blurStep);
-        const opacity = Math.max(0.35, 1 - depth * fadeStep);
-
+        // Subtle scale down for deck perspective, but 100% SOLID OPAQUE (no transparency)
+        const scale = Math.max(0.85, 1 - depth * scaleStep);
         card.style.transform = `scale(${scale})`;
         card.style.transformOrigin = 'center top';
-        card.style.filter = blur > 0 ? `blur(${blur}px)` : 'none';
-        card.style.opacity = `${opacity}`;
       } else {
-        // Card is active or below
         card.style.transform = 'scale(1)';
-        card.style.filter = 'none';
-        card.style.opacity = '1';
       }
+      // Guarantee 100% solid opacity: NEVER see through to cards below
+      card.style.opacity = '1';
+      card.style.filter = 'none';
     });
 
     if (currentTop === cards.length - 1 && onStackComplete) {
       onStackComplete();
     }
-  }, [topOffset, stackOffset, scaleStep, blurStep, fadeStep, onStackComplete]);
+  }, [stackOffset, scaleStep, onStackComplete]);
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -94,12 +83,12 @@ export const ScrollStack = ({
   }, [handleScroll]);
 
   return (
-    <div ref={containerRef} className={`scroll-stack-wrapper relative ${className}`.trim()}>
+    <div ref={containerRef} className={`scroll-stack-wrapper relative w-full ${className}`.trim()}>
       <div
-        className="scroll-stack-list flex flex-col"
+        className="scroll-stack-list flex flex-col items-center"
         style={{
           rowGap: `${itemDistance}px`,
-          paddingBottom: '160px'
+          paddingBottom: '40vh'
         }}
       >
         {React.Children.map(children, (child, idx) => {
