@@ -160,8 +160,8 @@ export const ScrollStackTestPage = () => {
         <ScrollStack
           itemDistance={56}
           topOffset="10vh"
-          stackOffset={34}
-          scaleStep={0.018}
+          stackOffset={0}
+          scaleStep={0.015}
           className="w-full flex justify-center"
         >
           {rankedSlots.map((slot) => {
@@ -238,7 +238,7 @@ export const ScrollStackTestPage = () => {
                   </div>
 
                   {/* Main Card Body (Grand Two-Column Split in 80vh) */}
-                  <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 p-8 sm:p-14 lg:p-16 gap-8 sm:gap-12 items-center">
+                  <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 p-6 sm:p-10 lg:p-12 gap-6 sm:gap-10 items-center">
                     {/* LEFT HALF: Nominee Showcase (Pos, Photo, Name, Discord) */}
                     <div className="flex items-center gap-6 sm:gap-10">
                       {/* Big Position Numeral Box */}
