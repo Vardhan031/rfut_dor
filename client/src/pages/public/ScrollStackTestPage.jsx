@@ -148,7 +148,7 @@ export const ScrollStackTestPage = () => {
   const allAssigned = rankedSlots.every((s) => s.nomineeId);
 
   return (
-    <div className="min-h-screen text-[#F5F0E6] bg-[#070604] relative pb-48 pt-6 sm:pt-10">
+    <div className="min-h-screen text-[#F5F0E6] bg-[#070604] relative pb-48 pt-8 sm:pt-12">
       {/* Gala Atmosphere Theatrical Lighting */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[650px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#D4AF57]/14 via-[#D4AF57]/2 to-transparent blur-3xl" />
@@ -156,10 +156,10 @@ export const ScrollStackTestPage = () => {
       </div>
 
       <div className="relative z-10 w-full flex flex-col items-center">
-        {/* THE 80vw x 80vh FLOATING SCROLL STACK (100% Solid Opaque, Descending 10 -> 1) */}
+        {/* THE 92vw FLOATING SCROLL STACK (100% Solid Opaque, Descending 10 -> 1) */}
         <ScrollStack
           itemDistance={56}
-          topOffset="10vh"
+          topOffset="calc(5rem + 28px)"
           stackOffset={0}
           scaleStep={0.015}
           className="w-full flex justify-center"
@@ -176,7 +176,7 @@ export const ScrollStackTestPage = () => {
             return (
               <ScrollStackItem key={slot.rank}>
                 <div
-                  className={`w-[80vw] h-[80vh] rounded-3xl border transition-all duration-300 relative flex flex-col justify-between shadow-[0_25px_70px_rgba(0,0,0,0.95)] ${
+                  className={`w-[92vw] max-w-[1550px] h-[78vh] min-h-[480px] rounded-3xl border transition-all duration-300 relative flex flex-col justify-between shadow-[0_25px_70px_rgba(0,0,0,0.95)] ${
                     isWinner
                       ? 'bg-[#0E0C08] border-[#D4AF57] shadow-[0_25px_80px_rgba(212,175,87,0.35)]'
                       : isSilver
@@ -460,7 +460,7 @@ export const ScrollStackTestPage = () => {
 
         {/* Milestone Submission Card (When all 10 are chosen) */}
         {allAssigned && (
-          <div className="mt-20 p-8 sm:p-12 rounded-3xl bg-[#0E0C08] border-2 border-[#D4AF57] text-center w-[80vw] mx-auto space-y-4 shadow-[0_20px_70px_rgba(212,175,87,0.35)] animate-fadeIn">
+          <div className="mt-20 p-8 sm:p-12 rounded-3xl bg-[#0E0C08] border-2 border-[#D4AF57] text-center w-[92vw] max-w-[1550px] mx-auto space-y-4 shadow-[0_20px_70px_rgba(212,175,87,0.35)] animate-fadeIn">
             <div className="w-16 h-16 mx-auto rounded-full bg-[#D4AF57]/15 border border-[#D4AF57] flex items-center justify-center text-[#D4AF57] shadow-xl">
               <Trophy className="w-8 h-8" />
             </div>

@@ -43,11 +43,9 @@ export const ScrollStack = ({
     let currentTop = 0;
     cards.forEach((card, i) => {
       const rect = card.getBoundingClientRect();
-      const topOffsetPx = stackOffset > 0
-        ? (window.innerHeight * 10) / 100 + i * stackOffset
-        : (window.innerHeight * 10) / 100;
+      const targetTop = parseFloat(window.getComputedStyle(card).top) || 100;
 
-      if (rect.top <= topOffsetPx + 4) {
+      if (rect.top <= targetTop + 4) {
         currentTop = i;
       }
     });
