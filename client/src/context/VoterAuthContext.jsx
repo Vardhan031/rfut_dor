@@ -77,21 +77,22 @@ export const VoterAuthProvider = ({ children }) => {
   };
 
   // Toggle nominee selection (max 10)
+  // NOTE: rankings is intentionally NOT updated here — it is only set
+  // by the RankingPage once the voter explicitly orders their nominees.
   const toggleSelectNominee = (nominee) => {
     const exists = selectedNominees.some((n) => n._id === nominee._id);
     if (exists) {
       const filtered = selectedNominees.filter((n) => n._id !== nominee._id);
       setSelectedNominees(filtered);
-      // Also update rankings
-      setRankings(filtered);
+      // Clear rankings too so stale order doesn't bleed through
+      setRankings([]);
     } else {
       if (selectedNominees.length >= 10) {
         toast.warning('You have already selected 10 nominees. Remove one first to add another.');
         return;
       }
-      const updated = [...selectedNominees, nominee];
-      setSelectedNominees(updated);
-      setRankings(updated);
+      setSelectedNominees((prev) => [...prev, nominee]);
+      // Do NOT auto-populate rankings — voter must rank manually
     }
   };
 

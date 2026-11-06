@@ -97,6 +97,11 @@ const MedalBadge = ({ rank }) => (
 const DesktopScrollStackView = ({ selectedNominees, rankings, setRankings }) => {
   const navigate = useNavigate();
 
+  // Scroll to top on mount so the header is always visible first
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   const [rankedSlots, setRankedSlots] = useState(() => {
     if (rankings && rankings.length === 10) {
       return DESCENDING_RANKS.map((slot) => {
@@ -517,6 +522,11 @@ const DesktopScrollStackView = ({ selectedNominees, rankings, setRankings }) => 
 
 const MobileDragDropView = ({ selectedNominees, rankings, setRankings }) => {
   const navigate = useNavigate();
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
 
   // Local sorted list — initialised from context rankings or selected order
   const [localRankings, setLocalRankings] = useState(() => {
