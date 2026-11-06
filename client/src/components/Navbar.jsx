@@ -66,7 +66,7 @@ export const Navbar = () => {
                 <NavLink
                   key={link.path}
                   to={link.path}
-                  className="relative py-2 text-xs font-sans font-medium uppercase tracking-[0.2em] transition-colors"
+                  className="relative py-2 text-xs font-sans font-medium uppercase tracking-[0.2em] transition-colors flex items-center gap-1.5"
                 >
                   <span
                     className={
@@ -77,6 +77,11 @@ export const Navbar = () => {
                   >
                     {link.label}
                   </span>
+                  {link.isNew && (
+                    <span className="text-[9px] font-mono tracking-wider px-1.5 py-0.5 rounded bg-[#D4AF57]/20 border border-[#D4AF57]/50 text-[#E8C97B] leading-none animate-pulse">
+                      TEST
+                    </span>
+                  )}
                   {isActive && (
                     <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#D4AF57] shadow-[0_0_8px_rgba(212,175,87,0.5)]" />
                   )}
@@ -186,7 +191,14 @@ export const Navbar = () => {
                       : 'text-typography-secondary hover:text-typography-primary hover:bg-[#181510]'
                   }`}
                 >
-                  <span>{link.label}</span>
+                  <div className="flex items-center gap-2">
+                    <span>{link.label}</span>
+                    {link.isNew && (
+                      <span className="text-[9px] font-mono tracking-wider px-1.5 py-0.5 rounded bg-[#D4AF57]/20 border border-[#D4AF57]/40 text-[#E8C97B]">
+                        PROTOTYPE
+                      </span>
+                    )}
+                  </div>
                   {isActive && <span className="text-[10px] font-mono">&bull; ACTIVE</span>}
                 </Link>
               );

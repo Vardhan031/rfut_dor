@@ -5,7 +5,7 @@ import { Footer } from '../components/Footer';
 
 export const VoterLayout = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-[#0A0907] relative overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-[#0A0907] relative overflow-x-clip">
       <Navbar />
 
       <main className="flex-1 relative z-10 flex flex-col -mt-16 sm:-mt-20">
