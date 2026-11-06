@@ -245,7 +245,7 @@ export const ScrollStackTestPage = () => {
                   </div>
 
                   {/* Main Card Body (Two-Column Split matching wireframe) */}
-                  <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#2E2618]/70 overflow-hidden">
+                  <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#2E2618]/70 relative">
                     {/* LEFT HALF: Circular PFP + Overlapping Rank Rectangle Badge + Name + Discord */}
                     <div className="bg-[#120F0A]/90 p-6 sm:p-10 flex flex-col items-center justify-center text-center">
                       {/* Circular Avatar Container with Overlapping Rank Badge */}
@@ -290,20 +290,20 @@ export const ScrollStackTestPage = () => {
                         </div>
                       </div>
 
-                      {/* Username and Discord Username (Directly Under the PFP) */}
-                      <div className="mt-8 sm:mt-9 space-y-1 max-w-sm sm:max-w-md">
+                      {/* Username and Discord Username (Directly Under the PFP - Full Visibility, No Truncation) */}
+                      <div className="mt-8 sm:mt-9 space-y-1 w-full max-w-xl px-4">
                         {assignedNominee ? (
                           <>
-                            <h2 className="font-playfair text-2xl sm:text-4xl lg:text-5xl font-bold uppercase tracking-wider text-typography-primary leading-tight truncate">
+                            <h2 className="font-playfair text-2xl sm:text-3xl lg:text-4xl xl:text-[42px] font-bold uppercase tracking-wide text-typography-primary leading-tight break-words">
                               {assignedNominee.name}
                             </h2>
-                            <p className="font-mono text-sm sm:text-lg text-[#E8C97B] truncate">
+                            <p className="font-mono text-sm sm:text-lg text-[#E8C97B] break-words">
                               {assignedNominee.discord}
                             </p>
                           </>
                         ) : (
                           <>
-                            <h2 className="font-playfair text-xl sm:text-3xl font-bold uppercase tracking-wider text-typography-muted/50 italic">
+                            <h2 className="font-playfair text-xl sm:text-3xl font-bold uppercase tracking-wide text-typography-muted/50 italic">
                               Unassigned
                             </h2>
                             <p className="font-mono text-xs sm:text-sm text-typography-muted">
@@ -314,8 +314,8 @@ export const ScrollStackTestPage = () => {
                       </div>
                     </div>
 
-                    {/* RIGHT HALF: Nominee Selection Dropdown (Centered Vertically) */}
-                    <div className="bg-[#080705]/95 p-6 sm:p-10 flex flex-col justify-center items-center">
+                    {/* RIGHT HALF: Nominee Selection Dropdown (Positioned in Upper Half of Card) */}
+                    <div className="bg-[#080705]/95 p-6 sm:p-10 lg:p-12 flex flex-col justify-start items-center pt-8 sm:pt-12 lg:pt-16">
                       <div className="w-full max-w-md space-y-3">
                         <div className="flex items-center justify-between text-xs font-mono">
                           <span className="text-typography-secondary uppercase tracking-widest text-[11px]">
@@ -380,7 +380,7 @@ export const ScrollStackTestPage = () => {
                           {/* Luxury Dropdown Popup Menu */}
                           {isDropdownOpen && (
                             <div
-                              className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl border-2 border-[#D4AF57] bg-[#100E0A] shadow-[0_25px_60px_rgba(0,0,0,0.95)] max-h-72 overflow-y-auto divide-y divide-[#2A2317] p-1.5"
+                              className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl border-2 border-[#D4AF57] bg-[#100E0A] shadow-[0_25px_60px_rgba(0,0,0,0.95)] max-h-[360px] sm:max-h-[420px] overflow-y-auto divide-y divide-[#2A2317] p-1.5"
                               style={{ backgroundColor: '#100E0A' }}
                             >
                               {NOMINEE_POOL.map((nominee) => {
