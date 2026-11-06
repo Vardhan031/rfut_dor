@@ -15,6 +15,7 @@ import { NomineeSelectionPage } from './pages/voter/NomineeSelectionPage';
 import { RankingPage } from './pages/voter/RankingPage';
 import { ConfirmationPage } from './pages/voter/ConfirmationPage';
 import { SuccessPage } from './pages/voter/SuccessPage';
+import { ScrollStackTestPage } from './pages/public/ScrollStackTestPage';
 
 // Admin pages
 import { AdminLogin } from './pages/admin/AdminLogin';
@@ -75,6 +76,7 @@ function App() {
               <Route element={<VoterLayout />}>
                 <Route path="/" element={<AccessPage />} />
                 <Route path="/nominees" element={<PublicNomineesPage />} />
+                <Route path="/test-scroll-stack" element={<ScrollStackTestPage />} />
                 <Route path="/vote/select" element={<NomineeSelectionPage />} />
                 <Route path="/vote/rank" element={<RankingPage />} />
                 <Route path="/vote/confirm" element={<ConfirmationPage />} />
