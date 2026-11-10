@@ -94,13 +94,10 @@ export const AdminDashboard = () => {
   }
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto py-2">
+    <div className="space-y-8 max-w-5xl mx-auto py-2 font-sans">
       {/* Page Title */}
       <div className="border-b border-surface-border pb-6 space-y-1">
-        <span className="text-[10px] font-sans font-semibold tracking-[0.2em] text-gold block">
-          r/FUT d'Or 2026 &bull; STEWARD CONSOLE
-        </span>
-        <h1 className="font-display font-medium text-3xl sm:text-4xl text-typography-primary uppercase tracking-wide">
+        <h1 className="font-playfair font-bold text-3xl sm:text-4xl text-typography-primary uppercase tracking-wide">
           Overview
         </h1>
         <p className="text-typography-secondary text-xs sm:text-sm font-sans">
@@ -111,48 +108,48 @@ export const AdminDashboard = () => {
       {/* 4 Essential Statistics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* 1. Total Eligible Voters */}
-        <div className="p-5 bg-surface border border-surface-border space-y-2">
+        <div className="p-5 bg-surface-card border border-surface-border rounded-2xl space-y-2 shadow-sm hover:border-[#D4AF57]/40 transition">
           <div className="flex items-center justify-between text-typography-secondary">
             <span className="text-xs font-sans uppercase tracking-wider">Eligible Voters</span>
-            <Users className="w-3.5 h-3.5 text-gold" />
+            <Users className="w-4 h-4 text-[#D4AF57]" />
           </div>
-          <p className="font-display font-medium text-3xl sm:text-4xl text-typography-primary">
+          <p className="font-playfair font-bold text-3xl sm:text-4xl text-typography-primary">
             {data?.totalVoters ?? 0}
           </p>
           <span className="text-[10px] text-typography-muted font-mono block">Authorized codes issued</span>
         </div>
 
         {/* 2. Votes Submitted */}
-        <div className="p-5 bg-surface border border-surface-border space-y-2">
+        <div className="p-5 bg-surface-card border border-surface-border rounded-2xl space-y-2 shadow-sm hover:border-[#D4AF57]/40 transition">
           <div className="flex items-center justify-between text-typography-secondary">
             <span className="text-xs font-sans uppercase tracking-wider">Votes Submitted</span>
-            <CheckCircle2 className="w-3.5 h-3.5 text-gold" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           </div>
-          <p className="font-display font-medium text-3xl sm:text-4xl text-gold">
+          <p className="font-playfair font-bold text-3xl sm:text-4xl text-gold">
             {data?.totalSubmitted ?? 0}
           </p>
           <span className="text-[10px] text-typography-muted font-mono block">Official sealed ballots</span>
         </div>
 
         {/* 3. Pending Votes */}
-        <div className="p-5 bg-surface border border-surface-border space-y-2">
+        <div className="p-5 bg-surface-card border border-surface-border rounded-2xl space-y-2 shadow-sm hover:border-[#D4AF57]/40 transition">
           <div className="flex items-center justify-between text-typography-secondary">
             <span className="text-xs font-sans uppercase tracking-wider">Pending Votes</span>
-            <Clock className="w-3.5 h-3.5 text-typography-muted" />
+            <Clock className="w-4 h-4 text-amber-400" />
           </div>
-          <p className="font-display font-medium text-3xl sm:text-4xl text-typography-primary">
+          <p className="font-playfair font-bold text-3xl sm:text-4xl text-typography-primary">
             {data?.totalPending ?? 0}
           </p>
           <span className="text-[10px] text-typography-muted font-mono block">Unused voter codes</span>
         </div>
 
         {/* 4. Total Nominees */}
-        <div className="p-5 bg-surface border border-surface-border space-y-2">
+        <div className="p-5 bg-surface-card border border-surface-border rounded-2xl space-y-2 shadow-sm hover:border-[#D4AF57]/40 transition">
           <div className="flex items-center justify-between text-typography-secondary">
             <span className="text-xs font-sans uppercase tracking-wider">Total Nominees</span>
-            <Award className="w-3.5 h-3.5 text-gold" />
+            <Award className="w-4 h-4 text-[#D4AF57]" />
           </div>
-          <p className="font-display font-medium text-3xl sm:text-4xl text-typography-primary">
+          <p className="font-playfair font-bold text-3xl sm:text-4xl text-typography-primary">
             {data?.totalNominees ?? 0}
           </p>
           <span className="text-[10px] text-typography-muted font-mono block">Shortlist candidates</span>
@@ -162,18 +159,29 @@ export const AdminDashboard = () => {
       {/* Two Essential Governance Sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
         {/* Section A: Voting Control */}
-        <div className="p-6 bg-surface border border-surface-border space-y-4 flex flex-col justify-between">
+        <div className="p-6 bg-surface-card border border-surface-border rounded-2xl space-y-4 flex flex-col justify-between shadow-sm">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono tracking-widest uppercase text-gold">
+              <span className="text-[10px] font-mono tracking-widest uppercase text-[#D4AF57]">
                 Voting Gate Control
               </span>
-              <span className="px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider border border-surface-border bg-background">
-                Status: {data?.isVotingOpen ? 'OPEN' : 'CLOSED'}
+              <span
+                className={`px-3 py-1 rounded-full text-[10px] font-sans font-bold uppercase tracking-wider border flex items-center gap-1.5 ${
+                  data?.isVotingOpen
+                    ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/50 shadow-sm'
+                    : 'bg-rose-950/30 text-rose-400 border-rose-800/50 shadow-sm'
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    data?.isVotingOpen ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : 'bg-rose-400 shadow-[0_0_6px_#f43f5e]'
+                  }`}
+                />
+                <span>Status: {data?.isVotingOpen ? 'OPEN' : 'CLOSED'}</span>
               </span>
             </div>
 
-            <h3 className="font-display font-medium text-2xl text-typography-primary uppercase tracking-wide">
+            <h3 className="font-playfair font-bold text-2xl text-typography-primary uppercase tracking-wide">
               {data?.isVotingOpen ? 'Voting Active' : 'Voting Closed'}
             </h3>
 
@@ -188,10 +196,10 @@ export const AdminDashboard = () => {
             <button
               onClick={handleToggleVoting}
               disabled={updatingControl}
-              className={`w-full py-2.5 px-4 font-sans font-semibold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-colors cursor-pointer ${
+              className={`w-full py-2.5 px-4 rounded-xl font-sans font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95 ${
                 data?.isVotingOpen
-                  ? 'border border-surface-border hover:border-gold text-typography-secondary hover:text-typography-primary bg-background'
-                  : 'bg-gold hover:bg-[#A88A4A] text-[#0C0C0B]'
+                  ? 'border border-surface-border hover:border-amber-700/60 text-typography-secondary hover:text-amber-300 bg-[#181510] hover:bg-amber-950/30'
+                  : 'bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0A0907] shadow-[0_2px_14px_rgba(212,175,87,0.3)]'
               }`}
             >
               <Power className="w-3.5 h-3.5" />
@@ -201,18 +209,29 @@ export const AdminDashboard = () => {
         </div>
 
         {/* Section B: Results Privacy */}
-        <div className="p-6 bg-surface border border-surface-border space-y-4 flex flex-col justify-between">
+        <div className="p-6 bg-surface-card border border-surface-border rounded-2xl space-y-4 flex flex-col justify-between shadow-sm">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono tracking-widest uppercase text-gold">
+              <span className="text-[10px] font-mono tracking-widest uppercase text-[#D4AF57]">
                 Ceremony Confidentiality
               </span>
-              <span className="px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider border border-surface-border bg-background">
-                {data?.resultsAnnounced ? 'ANNOUNCED' : 'CONFIDENTIAL'}
+              <span
+                className={`px-3 py-1 rounded-full text-[10px] font-sans font-bold uppercase tracking-wider border flex items-center gap-1.5 ${
+                  data?.resultsAnnounced
+                    ? 'bg-amber-950/40 text-amber-300 border-amber-800/50 shadow-sm'
+                    : 'bg-[#181510] text-typography-secondary border-surface-border'
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    data?.resultsAnnounced ? 'bg-amber-400 shadow-[0_0_6px_#fbbf24]' : 'bg-[#706859]'
+                  }`}
+                />
+                <span>{data?.resultsAnnounced ? 'ANNOUNCED' : 'CONFIDENTIAL'}</span>
               </span>
             </div>
 
-            <h3 className="font-display font-medium text-2xl text-typography-primary uppercase tracking-wide">
+            <h3 className="font-playfair font-bold text-2xl text-typography-primary uppercase tracking-wide">
               Results & Winner Privacy
             </h3>
 
@@ -224,19 +243,19 @@ export const AdminDashboard = () => {
           <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
             <Link
               to="/admin/results"
-              className="w-full sm:flex-1 py-2.5 px-4 border border-surface-border hover:border-gold text-typography-primary text-xs font-sans uppercase tracking-widest flex items-center justify-center gap-2 transition-colors text-center"
+              className="w-full sm:flex-1 py-2.5 px-4 rounded-xl border border-surface-border bg-[#181510] hover:bg-[#D4AF57]/15 hover:border-[#D4AF57]/60 text-typography-primary text-xs font-sans font-semibold uppercase tracking-widest flex items-center justify-center gap-2 transition-all text-center cursor-pointer shadow-sm active:scale-95"
             >
-              <Eye className="w-3.5 h-3.5 text-gold" />
+              <Eye className="w-3.5 h-3.5 text-[#D4AF57]" />
               <span>View Results</span>
             </Link>
 
             <button
               onClick={handleToggleAnnouncement}
               disabled={updatingControl}
-              className={`w-full sm:w-auto py-2.5 px-4 font-sans font-semibold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-colors cursor-pointer whitespace-nowrap ${
+              className={`w-full sm:w-auto py-2.5 px-5 rounded-xl font-sans font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap shadow-sm active:scale-95 ${
                 data?.resultsAnnounced
-                  ? 'border border-surface-border text-typography-secondary hover:text-typography-primary bg-background'
-                  : 'bg-gold hover:bg-[#A88A4A] text-[#0C0C0B]'
+                  ? 'border border-surface-border text-typography-secondary hover:text-typography-primary bg-[#181510] hover:bg-surface-hover'
+                  : 'bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0A0907] shadow-[0_2px_14px_rgba(212,175,87,0.3)]'
               }`}
             >
               <Radio className="w-3.5 h-3.5" />

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import {
   Trophy,
-  Download,
   Radio,
   Crown,
   RefreshCw
@@ -57,30 +56,6 @@ export const AdminResults = () => {
     }
   };
 
-  const exportResultsCsv = () => {
-    if (!data?.leaderboard || data.leaderboard.length === 0) return;
-
-    const rows = [
-      'Rank,Candidate,Discord Handle,Total Points,1st Place Votes,2nd Place Votes,3rd Place Votes,Top 10 Appearances,Status,Tie Status'
-    ];
-
-    for (const item of data.leaderboard) {
-      rows.push(
-        `"${item.rank}","${item.displayName}","${item.discordUsername}","${item.totalPoints}","${item.firstPlaceVotes}","${item.secondPlaceVotes}","${item.thirdPlaceVotes}","${item.top10Appearances}","${item.isActive ? 'Active' : 'Inactive'}","${item.isTied ? 'Tied' : 'Clear'}"`
-      );
-    }
-
-    const csvContent = 'data:text/csv;charset=utf-8,' + rows.join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `rfut_dor_results_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('Results CSV exported successfully.');
-  };
-
   if (loading && !data) {
     return (
       <div className="py-24 flex flex-col items-center justify-center text-typography-secondary space-y-3 font-sans">
@@ -112,14 +87,6 @@ export const AdminResults = () => {
             title="Recalculate Scores"
           >
             <RefreshCw className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={exportResultsCsv}
-            className="px-4 py-2 rounded-xl border border-surface-border bg-surface-card hover:bg-surface-hover text-typography-primary text-xs font-sans font-medium flex items-center gap-2 transition cursor-pointer active:scale-95 shadow-sm"
-          >
-            <Download className="w-4 h-4 text-gold/80" />
-            <span>Export Standings CSV</span>
           </button>
 
           <button
