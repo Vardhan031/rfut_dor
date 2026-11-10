@@ -41,16 +41,10 @@ export const AdminLogin = () => {
       </div>
 
       <div className="max-w-md w-full bg-[#110F0B]/95 border border-[#554628] rounded-2xl p-5 sm:p-8 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_25px_rgba(212,175,87,0.1)]">
-        <div className="text-center mb-7 space-y-1.5">
-          <span className="text-[10px] font-mono tracking-[0.25em] uppercase text-[#D4AF57] block">
-            STEWARDSHIP ACCESS
-          </span>
+        <div className="text-center mb-7">
           <h2 className="font-playfair font-bold text-2xl sm:text-3xl text-[#F5F0E6] uppercase tracking-wide">
             Administration Portal
           </h2>
-          <p className="text-xs text-[#A69D8B] font-sans">
-            Ceremony stewards and voting governance controls.
-          </p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4 font-sans">

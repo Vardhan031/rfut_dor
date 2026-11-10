@@ -132,7 +132,7 @@ export const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Two Essential Governance Sections */}
+      {/* Main Ceremony Controls */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
         {/* Section A: Voting Control */}
         <div className="p-6 bg-surface-card border border-surface-border rounded-2xl space-y-4 flex flex-col justify-between shadow-sm">
