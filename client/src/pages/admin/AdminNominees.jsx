@@ -27,7 +27,6 @@ export const AdminNominees = () => {
   const [formData, setFormData] = useState({
     displayName: '',
     discordUsername: '',
-    description: '',
     isActive: true
   });
   const [saving, setSaving] = useState(false);
@@ -60,7 +59,6 @@ export const AdminNominees = () => {
     setFormData({
       displayName: '',
       discordUsername: '',
-      description: '',
       isActive: true
     });
     setShowModal(true);
@@ -71,7 +69,6 @@ export const AdminNominees = () => {
     setFormData({
       displayName: nominee.displayName || '',
       discordUsername: nominee.discordUsername || '',
-      description: nominee.description || '',
       isActive: nominee.isActive !== false
     });
     setShowModal(true);
@@ -301,46 +298,31 @@ export const AdminNominees = () => {
               />
 
               <div>
-                {/* Header row: Initial Monogram Badge + Name + Active Status Badge */}
-                <div className="flex items-start gap-3.5">
-                  {/* Luxury Monogram Badge (replaces photo completely) */}
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#262016] to-[#14110C] border border-[#52442A] group-hover:border-[#D4AF57] flex items-center justify-center text-[#D4AF57] font-playfair font-bold text-lg shadow-inner flex-shrink-0 transition-colors">
-                    {nominee.displayName?.charAt(0)?.toUpperCase() || <Award className="w-5 h-5 text-[#D4AF57]" />}
-                  </div>
-
-                  {/* Nominee Details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <h3 className="font-playfair font-bold text-lg text-typography-primary uppercase tracking-wide truncate group-hover:text-[#E8C97B] transition-colors">
-                        {nominee.displayName}
-                      </h3>
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[9px] font-sans font-bold uppercase tracking-wider border flex items-center gap-1.5 flex-shrink-0 ${
-                          nominee.isActive
-                            ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/50 shadow-sm'
-                            : 'bg-[#181510] text-typography-muted border-surface-border'
-                        }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            nominee.isActive ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : 'bg-[#706859]'
-                          }`}
-                        />
-                        <span>{nominee.isActive ? 'Active' : 'Inactive'}</span>
-                      </span>
-                    </div>
-
+                {/* Header row: Name & Handle + Active Status Badge */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-playfair font-bold text-lg text-typography-primary uppercase tracking-wide truncate group-hover:text-[#E8C97B] transition-colors">
+                      {nominee.displayName}
+                    </h3>
                     <p className="text-xs text-[#D4AF57] font-mono truncate mt-0.5">
                       @{cleanDiscord(nominee.discordUsername)}
                     </p>
                   </div>
-                </div>
 
-                {/* Description / Accolades quote */}
-                <div className="mt-4 pt-3 border-t border-surface-border/60">
-                  <p className="text-xs text-typography-secondary font-sans leading-relaxed line-clamp-2 italic pl-2.5 border-l-2 border-[#D4AF57]/40">
-                    {nominee.description || 'No description provided.'}
-                  </p>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[9px] font-sans font-bold uppercase tracking-wider border flex items-center gap-1.5 flex-shrink-0 ${
+                      nominee.isActive
+                        ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/50 shadow-sm'
+                        : 'bg-[#181510] text-typography-muted border-surface-border'
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        nominee.isActive ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : 'bg-[#706859]'
+                      }`}
+                    />
+                    <span>{nominee.isActive ? 'Active' : 'Inactive'}</span>
+                  </span>
                 </div>
               </div>
 
@@ -436,19 +418,6 @@ export const AdminNominees = () => {
                   className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-sm text-typography-primary focus:outline-none focus:border-[#D4AF57] focus:ring-1 focus:ring-[#D4AF57]/30 transition font-mono"
                   required
                 />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium uppercase tracking-wider text-typography-secondary mb-1">
-                  Accolades & Achievements
-                </label>
-                <textarea
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Role, major accomplishments, community highlights..."
-                  className="w-full p-3 rounded-xl bg-background border border-surface-border text-xs text-typography-primary focus:outline-none focus:border-[#D4AF57] focus:ring-1 focus:ring-[#D4AF57]/30 transition"
-                ></textarea>
               </div>
 
               <div className="flex items-center gap-2 pt-1">
