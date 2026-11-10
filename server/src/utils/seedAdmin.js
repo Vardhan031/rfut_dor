@@ -4,7 +4,7 @@ import { Admin } from '../models/Admin.js';
 export const seedInitialAdmin = async () => {
   const targetEmail = (process.env.ADMIN_DEFAULT_EMAIL || 'rakesh@dor.com').toLowerCase().trim();
   const targetUsername = (process.env.ADMIN_DEFAULT_USERNAME || targetEmail).toLowerCase().trim();
-  const targetPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'Rakesh@Dor2026!';
+  const targetPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'sk_live_dor2026_9b4e7a2c1f8d';
 
   // 1. Purge legacy default "admin" account if present
   const purgeResult = await Admin.deleteMany({
