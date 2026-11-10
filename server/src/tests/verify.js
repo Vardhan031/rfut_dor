@@ -43,11 +43,11 @@ async function runVerification() {
       assert(err.message.includes('Invalid credentials'), 'Old admin credentials correctly rejected');
     }
 
-    const adminAuth = await adminService.loginAdmin('notapro@dor.com', 'Notapro@rfutdor');
-    assert(adminAuth && adminAuth.token, 'New admin credentials (notapro@dor.com) succeed and issue JWT token');
+    const adminAuth = await adminService.loginAdmin('rakesh@dor.com', 'Rakesh@Dor2026!');
+    assert(adminAuth && adminAuth.token, 'New admin credentials (rakesh@dor.com) succeed and issue JWT token');
     assert(
-      adminAuth.admin.username === 'notapro@dor.com' || adminAuth.admin.email === 'notapro@dor.com',
-      'Admin profile correctly retrieved with notapro@dor.com'
+      adminAuth.admin.username === 'rakesh@dor.com' || adminAuth.admin.email === 'rakesh@dor.com',
+      'Admin profile correctly retrieved with rakesh@dor.com'
     );
 
     // 2. Read Seed Codes

@@ -2,9 +2,9 @@ import bcrypt from 'bcryptjs';
 import { Admin } from '../models/Admin.js';
 
 export const seedInitialAdmin = async () => {
-  const targetEmail = (process.env.ADMIN_DEFAULT_EMAIL || 'notapro@dor.com').toLowerCase().trim();
+  const targetEmail = (process.env.ADMIN_DEFAULT_EMAIL || 'rakesh@dor.com').toLowerCase().trim();
   const targetUsername = (process.env.ADMIN_DEFAULT_USERNAME || targetEmail).toLowerCase().trim();
-  const targetPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'Notapro@rfutdor';
+  const targetPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'Rakesh@Dor2026!';
 
   // 1. Purge legacy default "admin" account if present
   const purgeResult = await Admin.deleteMany({
