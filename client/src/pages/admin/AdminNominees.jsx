@@ -8,12 +8,11 @@ import {
   Trash2,
   Power,
   X,
-  AlertCircle,
   AlertTriangle,
-  Users,
   CheckCircle2,
   XCircle,
-  Image as ImageIcon
+  Sparkles,
+  ShieldAlert
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -28,7 +27,6 @@ export const AdminNominees = () => {
   const [formData, setFormData] = useState({
     displayName: '',
     discordUsername: '',
-    imageUrl: '',
     description: '',
     isActive: true
   });
@@ -62,7 +60,6 @@ export const AdminNominees = () => {
     setFormData({
       displayName: '',
       discordUsername: '',
-      imageUrl: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=400&auto=format&fit=crop&q=80',
       description: '',
       isActive: true
     });
@@ -74,7 +71,6 @@ export const AdminNominees = () => {
     setFormData({
       displayName: nominee.displayName || '',
       discordUsername: nominee.discordUsername || '',
-      imageUrl: nominee.imageUrl || '',
       description: nominee.description || '',
       isActive: nominee.isActive !== false
     });
@@ -175,36 +171,35 @@ export const AdminNominees = () => {
   const activeCount = nominees.filter((n) => n.isActive).length;
   const inactiveCount = totalCount - activeCount;
 
+  const cleanDiscord = (handle) => {
+    if (!handle) return '';
+    return handle.replace(/^@/, '');
+  };
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto font-sans">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border pb-6">
         <div>
-          <span className="text-[11px] font-sans font-semibold uppercase tracking-widest text-gold block mb-1">
-            Governance &bull; Candidate Shortlist
-          </span>
-          <h1 className="font-display font-semibold text-3xl sm:text-4xl text-typography-primary uppercase tracking-wide">
+          <h1 className="font-playfair font-bold text-3xl sm:text-4xl text-typography-primary uppercase tracking-wide">
             Nominee Roster
           </h1>
-          <p className="text-typography-secondary text-sm font-sans mt-0.5">
-            Manage official r/FUT d'Or award nominees, profile imagery, and ballot eligibility.
-          </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           {nominees.length > 0 && (
             <button
               onClick={() => setShowDeleteAllModal(true)}
-              className="px-3.5 py-2 rounded-none border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-display font-medium text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl border border-rose-900/50 bg-rose-950/20 hover:bg-rose-900/40 text-rose-300 font-sans font-medium text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
               <span>Delete All Nominees</span>
             </button>
           )}
 
           <button
             onClick={openAddModal}
-            className="px-4 py-2 rounded-none bg-gold hover:bg-gold-light text-[#0B0A08] font-display font-medium text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0A0907] font-sans font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-2 shadow-[0_2px_14px_rgba(212,175,87,0.3)] active:scale-95"
           >
             <Plus className="w-4 h-4" />
             <span>Add New Nominee</span>
@@ -213,34 +208,40 @@ export const AdminNominees = () => {
       </div>
 
       {/* Overview Stat Badges & Search */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <div className="p-4 rounded-none bg-surface-card border border-surface-border flex items-center justify-between">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
+        <div className="p-4 rounded-2xl bg-surface-card border border-surface-border flex items-center justify-between shadow-sm">
           <div>
             <p className="text-[10px] font-sans uppercase tracking-widest text-typography-muted">Total Shortlist</p>
-            <p className="font-display text-2xl font-bold text-typography-primary mt-0.5">{totalCount}</p>
+            <p className="font-playfair text-2xl font-bold text-typography-primary mt-0.5">{totalCount}</p>
           </div>
-          <Award className="w-6 h-6 text-gold/60" />
+          <div className="w-10 h-10 rounded-xl bg-[#D4AF57]/10 border border-[#D4AF57]/20 flex items-center justify-center text-[#D4AF57]">
+            <Award className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="p-4 rounded-none bg-surface-card border border-surface-border flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-surface-card border border-surface-border flex items-center justify-between shadow-sm">
           <div>
             <p className="text-[10px] font-sans uppercase tracking-widest text-typography-muted">Active in Ballot</p>
-            <p className="font-display text-2xl font-bold text-emerald-400 mt-0.5">{activeCount}</p>
+            <p className="font-playfair text-2xl font-bold text-emerald-400 mt-0.5">{activeCount}</p>
           </div>
-          <CheckCircle2 className="w-6 h-6 text-emerald-400/60" />
+          <div className="w-10 h-10 rounded-xl bg-emerald-950/30 border border-emerald-800/30 flex items-center justify-center text-emerald-400">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="p-4 rounded-none bg-surface-card border border-surface-border flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-surface-card border border-surface-border flex items-center justify-between shadow-sm">
           <div>
             <p className="text-[10px] font-sans uppercase tracking-widest text-typography-muted">Inactive / Benched</p>
-            <p className="font-display text-2xl font-bold text-typography-secondary mt-0.5">{inactiveCount}</p>
+            <p className="font-playfair text-2xl font-bold text-typography-secondary mt-0.5">{inactiveCount}</p>
           </div>
-          <XCircle className="w-6 h-6 text-typography-muted/60" />
+          <div className="w-10 h-10 rounded-xl bg-[#1A1712] border border-surface-border flex items-center justify-center text-typography-muted">
+            <XCircle className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="p-3 rounded-none bg-surface-card border border-surface-border flex items-center">
+        <div className="p-3 rounded-2xl bg-surface-card border border-surface-border flex items-center shadow-sm">
           <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-typography-muted">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-typography-muted">
               <Search className="w-4 h-4" />
             </div>
             <input
@@ -248,34 +249,34 @@ export const AdminNominees = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Filter by name or Discord..."
-              className="w-full pl-9 pr-3 py-2 rounded-none bg-background border border-surface-border text-xs font-sans text-typography-primary placeholder-typography-muted focus:outline-none focus:border-gold transition"
+              className="w-full pl-9 pr-3 py-2 rounded-xl bg-background border border-surface-border text-xs font-sans text-typography-primary placeholder-typography-muted focus:outline-none focus:border-[#D4AF57] focus:ring-1 focus:ring-[#D4AF57]/30 transition"
             />
           </div>
         </div>
       </div>
 
-      {/* Grid of Nominees */}
+      {/* Grid of Nominees (Pure Awards Plaque - No Profile Photos) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {loading ? (
           <div className="col-span-3 py-20 text-center text-typography-muted font-sans text-xs flex flex-col items-center justify-center gap-2">
-            <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#D4AF57] border-t-transparent rounded-full animate-spin" />
             <span>Loading candidate shortlist from database...</span>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="col-span-3 py-20 text-center text-typography-muted font-sans text-xs bg-surface-card/40 border border-surface-border/60 p-8 flex flex-col items-center justify-center gap-3">
-            <Award className="w-10 h-10 text-gold/30" />
+          <div className="col-span-3 py-20 text-center text-typography-muted font-sans text-xs bg-surface-card/40 border border-surface-border rounded-2xl p-8 flex flex-col items-center justify-center gap-3">
+            <Award className="w-10 h-10 text-[#D4AF57]/40" />
             <p className="text-sm font-medium text-typography-secondary">
               {search ? 'No nominees match your search.' : 'No candidates registered in database.'}
             </p>
             <p className="text-xs text-typography-muted max-w-sm">
               {search
                 ? 'Try searching with a different keyword or clear your filter.'
-                : 'Click "Add New Nominee" above to create candidate profiles for the ballot.'}
+                : 'Click "Add New Nominee" above to create candidate entries for the ballot.'}
             </p>
             {!search && (
               <button
                 onClick={openAddModal}
-                className="mt-2 px-4 py-2 bg-gold hover:bg-gold-light text-[#0B0A08] font-display font-medium text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5"
+                className="mt-2 px-4 py-2 rounded-xl bg-[#D4AF57] hover:bg-[#E8C97B] text-[#0A0907] font-sans font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-sm"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add First Nominee</span>
@@ -286,76 +287,97 @@ export const AdminNominees = () => {
           filtered.map((nominee) => (
             <div
               key={nominee._id}
-              className={`p-5 rounded-none border transition-all duration-200 bg-surface-card flex flex-col justify-between hover:border-gold/40 ${
+              className={`p-5 rounded-2xl border transition-all duration-300 bg-surface-card flex flex-col justify-between relative overflow-hidden group shadow-[0_4px_20px_rgba(0,0,0,0.5)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.7),0_0_20px_rgba(212,175,87,0.12)] hover:border-[#D4AF57]/60 ${
                 nominee.isActive ? 'border-surface-border' : 'border-surface-border/50 opacity-60'
               }`}
             >
+              {/* Subtle Luxury Top Accent Bar */}
+              <div
+                className={`absolute top-0 left-0 right-0 h-1 transition-all ${
+                  nominee.isActive
+                    ? 'bg-gradient-to-r from-transparent via-[#D4AF57]/60 to-transparent group-hover:via-[#D4AF57]'
+                    : 'bg-transparent'
+                }`}
+              />
+
               <div>
-                <div className="flex items-start gap-4">
-                  <div className="relative w-16 h-16 flex-shrink-0 bg-background border border-surface-border overflow-hidden">
-                    <img
-                      src={nominee.imageUrl}
-                      alt={nominee.displayName}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src =
-                          'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=400&auto=format&fit=crop&q=80';
-                      }}
-                    />
+                {/* Header row: Initial Monogram Badge + Name + Active Status Badge */}
+                <div className="flex items-start gap-3.5">
+                  {/* Luxury Monogram Badge (replaces photo completely) */}
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#262016] to-[#14110C] border border-[#52442A] group-hover:border-[#D4AF57] flex items-center justify-center text-[#D4AF57] font-playfair font-bold text-lg shadow-inner flex-shrink-0 transition-colors">
+                    {nominee.displayName?.charAt(0)?.toUpperCase() || <Award className="w-5 h-5 text-[#D4AF57]" />}
                   </div>
 
+                  {/* Nominee Details */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1">
-                      <h3 className="font-display font-semibold text-lg text-typography-primary uppercase tracking-wide truncate">
+                    <div className="flex items-center justify-between gap-1.5">
+                      <h3 className="font-playfair font-bold text-lg text-typography-primary uppercase tracking-wide truncate group-hover:text-[#E8C97B] transition-colors">
                         {nominee.displayName}
                       </h3>
                       <span
-                        className={`px-2 py-0.5 rounded-none text-[9px] font-sans font-medium uppercase tracking-wider border ${
+                        className={`px-2.5 py-0.5 rounded-full text-[9px] font-sans font-bold uppercase tracking-wider border flex items-center gap-1.5 flex-shrink-0 ${
                           nominee.isActive
-                            ? 'bg-gold/10 text-gold border-gold/30'
-                            : 'bg-surface-muted text-typography-muted border-surface-border'
+                            ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/50 shadow-sm'
+                            : 'bg-[#181510] text-typography-muted border-surface-border'
                         }`}
                       >
-                        {nominee.isActive ? 'Active' : 'Inactive'}
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            nominee.isActive ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : 'bg-[#706859]'
+                          }`}
+                        />
+                        <span>{nominee.isActive ? 'Active' : 'Inactive'}</span>
                       </span>
                     </div>
-                    <p className="text-xs text-typography-secondary font-mono truncate mt-0.5">
-                      {nominee.discordUsername}
-                    </p>
-                    <p className="text-xs text-typography-secondary/80 mt-2 line-clamp-2 leading-relaxed font-sans">
-                      {nominee.description || 'No description provided.'}
+
+                    <p className="text-xs text-[#D4AF57] font-mono truncate mt-0.5">
+                      @{cleanDiscord(nominee.discordUsername)}
                     </p>
                   </div>
                 </div>
+
+                {/* Description / Accolades quote */}
+                <div className="mt-4 pt-3 border-t border-surface-border/60">
+                  <p className="text-xs text-typography-secondary font-sans leading-relaxed line-clamp-2 italic pl-2.5 border-l-2 border-[#D4AF57]/40">
+                    {nominee.description || 'No description provided.'}
+                  </p>
+                </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="mt-5 pt-3.5 border-t border-surface-border flex items-center justify-between text-xs font-sans">
+              {/* Reworked Action Buttons */}
+              <div className="mt-5 pt-3.5 border-t border-surface-border flex items-center justify-between gap-2 text-xs font-sans">
+                {/* Activate / Deactivate Pill Button */}
                 <button
+                  type="button"
                   onClick={() => handleToggleActive(nominee)}
-                  className={`px-2.5 py-1 border flex items-center gap-1.5 transition text-[11px] uppercase tracking-wider font-medium ${
+                  className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 text-[11px] font-sans uppercase tracking-wider font-semibold transition-all cursor-pointer shadow-sm active:scale-95 ${
                     nominee.isActive
-                      ? 'text-typography-secondary hover:text-typography-primary border-surface-border hover:border-gold/40'
-                      : 'text-gold border-gold/30 hover:bg-gold/10'
+                      ? 'border-surface-border bg-[#181510] hover:bg-amber-950/30 text-typography-secondary hover:text-amber-300 hover:border-amber-700/60'
+                      : 'border-emerald-800/60 bg-emerald-950/30 hover:bg-emerald-950/50 text-emerald-400 hover:border-emerald-500'
                   }`}
-                  title="Toggle active status"
+                  title="Toggle ballot eligibility"
                 >
-                  <Power className="w-3.5 h-3.5 text-gold/80" />
+                  <Power className={`w-3.5 h-3.5 ${nominee.isActive ? 'text-[#D4AF57]' : 'text-emerald-400'}`} />
                   <span>{nominee.isActive ? 'Deactivate' : 'Activate'}</span>
                 </button>
 
                 <div className="flex items-center gap-1.5">
+                  {/* Edit Button */}
                   <button
+                    type="button"
                     onClick={() => openEditModal(nominee)}
-                    className="p-1.5 border border-surface-border hover:bg-surface-border/30 text-typography-secondary hover:text-typography-primary transition"
-                    title="Edit Details"
+                    className="px-3 py-1.5 rounded-xl border border-surface-border bg-[#181510] hover:bg-[#D4AF57]/15 text-typography-secondary hover:text-[#E8C97B] hover:border-[#D4AF57]/60 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+                    title="Edit Nominee"
                   >
-                    <Edit className="w-3.5 h-3.5" />
+                    <Edit className="w-3.5 h-3.5 text-[#D4AF57]" />
+                    <span className="text-[11px] uppercase tracking-wider font-medium">Edit</span>
                   </button>
 
+                  {/* Delete Button */}
                   <button
+                    type="button"
                     onClick={() => setNomineeToDelete(nominee)}
-                    className="p-1.5 border border-surface-border hover:bg-rose-500/10 text-typography-muted hover:text-rose-400 hover:border-rose-500/30 transition"
+                    className="p-2 rounded-xl border border-surface-border bg-[#181510] hover:bg-rose-950/30 text-typography-muted hover:text-rose-400 hover:border-rose-800/60 transition-all cursor-pointer shadow-sm active:scale-95"
                     title="Delete Nominee"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -367,22 +389,22 @@ export const AdminNominees = () => {
         )}
       </div>
 
-      {/* CREATE / EDIT MODAL */}
+      {/* CREATE / EDIT MODAL (No Profile Picture Input) */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-surface-card border border-surface-border rounded-none p-6 relative space-y-4 font-sans shadow-2xl">
+          <div className="max-w-md w-full bg-surface-card border border-surface-border rounded-2xl p-6 relative space-y-4 font-sans shadow-2xl">
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-typography-muted hover:text-typography-primary transition"
+              className="absolute top-4 right-4 text-typography-muted hover:text-typography-primary p-1 rounded-lg hover:bg-[#181510] transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div>
-              <span className="text-[10px] font-sans font-semibold uppercase tracking-widest text-gold block mb-0.5">
+              <span className="text-[10px] font-mono font-semibold uppercase tracking-widest text-[#D4AF57] block mb-0.5">
                 {editingNominee ? 'Edit Candidate' : 'New Shortlist Entry'}
               </span>
-              <h3 className="font-display font-semibold text-xl uppercase tracking-wide text-typography-primary">
+              <h3 className="font-playfair font-bold text-xl uppercase tracking-wide text-typography-primary">
                 {editingNominee ? 'Update Candidate Profile' : 'Add Candidate Nominee'}
               </h3>
             </div>
@@ -390,56 +412,30 @@ export const AdminNominees = () => {
             <form onSubmit={handleSave} className="space-y-4 pt-1">
               <div>
                 <label className="block text-xs font-medium uppercase tracking-wider text-typography-secondary mb-1">
-                  Display / Candidate Name <span className="text-gold">*</span>
+                  Display / Candidate Name <span className="text-[#D4AF57]">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.displayName}
                   onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                   placeholder="e.g. Kylian Mbappe"
-                  className="w-full px-3 py-2.5 rounded-none bg-background border border-surface-border text-sm text-typography-primary focus:outline-none focus:border-gold"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-sm text-typography-primary focus:outline-none focus:border-[#D4AF57] focus:ring-1 focus:ring-[#D4AF57]/30 transition"
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-medium uppercase tracking-wider text-typography-secondary mb-1">
-                  Discord Username <span className="text-gold">*</span>
+                  Discord Username <span className="text-[#D4AF57]">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.discordUsername}
                   onChange={(e) => setFormData({ ...formData, discordUsername: e.target.value })}
                   placeholder="e.g. mbappe_9"
-                  className="w-full px-3 py-2.5 rounded-none bg-background border border-surface-border text-sm text-typography-primary focus:outline-none focus:border-gold"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-surface-border text-sm text-typography-primary focus:outline-none focus:border-[#D4AF57] focus:ring-1 focus:ring-[#D4AF57]/30 transition font-mono"
                   required
                 />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium uppercase tracking-wider text-typography-secondary mb-1">
-                  Profile Photo URL <span className="text-gold">*</span>
-                </label>
-                <div className="flex gap-2 items-center">
-                  <input
-                    type="url"
-                    value={formData.imageUrl}
-                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                    placeholder="https://..."
-                    className="flex-1 px-3 py-2.5 rounded-none bg-background border border-surface-border text-xs text-typography-primary focus:outline-none focus:border-gold"
-                    required
-                  />
-                  {formData.imageUrl && (
-                    <img
-                      src={formData.imageUrl}
-                      alt="Preview"
-                      className="w-10 h-10 object-cover border border-surface-border flex-shrink-0"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                  )}
-                </div>
               </div>
 
               <div>
@@ -450,8 +446,8 @@ export const AdminNominees = () => {
                   rows={3}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Role, major accomplishments, tournament records..."
-                  className="w-full p-3 rounded-none bg-background border border-surface-border text-xs text-typography-primary focus:outline-none focus:border-gold"
+                  placeholder="Role, major accomplishments, community highlights..."
+                  className="w-full p-3 rounded-xl bg-background border border-surface-border text-xs text-typography-primary focus:outline-none focus:border-[#D4AF57] focus:ring-1 focus:ring-[#D4AF57]/30 transition"
                 ></textarea>
               </div>
 
@@ -461,25 +457,25 @@ export const AdminNominees = () => {
                   id="isActive"
                   checked={formData.isActive}
                   onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="rounded bg-background border-surface-border text-gold focus:ring-0 cursor-pointer"
+                  className="w-4 h-4 rounded accent-[#D4AF57] cursor-pointer"
                 />
                 <label htmlFor="isActive" className="text-xs text-typography-secondary cursor-pointer select-none">
                   Active on voting ballot (Eligible for voter selection)
                 </label>
               </div>
 
-              <div className="pt-3 border-t border-surface-border flex justify-end gap-2">
+              <div className="pt-3 border-t border-surface-border flex justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 rounded-none text-xs text-typography-secondary hover:text-typography-primary transition"
+                  className="px-4 py-2 rounded-xl text-xs text-typography-secondary hover:text-typography-primary hover:bg-[#181510] transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2.5 rounded-none bg-gold hover:bg-gold-light text-[#0B0A08] font-display font-medium text-xs uppercase tracking-wider shadow-sm transition disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0A0907] font-sans font-bold text-xs uppercase tracking-wider shadow-sm transition disabled:opacity-50 cursor-pointer"
                 >
                   {saving ? 'Saving...' : editingNominee ? 'Update Nominee' : 'Save Nominee'}
                 </button>
@@ -492,13 +488,13 @@ export const AdminNominees = () => {
       {/* DELETE SINGLE NOMINEE CONFIRMATION MODAL */}
       {nomineeToDelete && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-surface-card border border-rose-500/30 p-6 space-y-4">
+          <div className="max-w-md w-full bg-surface-card border border-rose-900/50 rounded-2xl p-6 space-y-4 shadow-2xl">
             <div className="flex items-start gap-3">
-              <div className="p-2.5 bg-rose-500/10 border border-rose-500/30 text-rose-400">
+              <div className="p-2.5 bg-rose-950/40 border border-rose-800/40 text-rose-400 rounded-xl">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div className="flex-1">
-                <h3 className="font-display font-semibold text-lg text-typography-primary uppercase">
+                <h3 className="font-playfair font-bold text-lg text-typography-primary uppercase">
                   Delete Nominee?
                 </h3>
                 <p className="text-xs text-typography-secondary mt-1">
@@ -506,7 +502,7 @@ export const AdminNominees = () => {
                   <span className="font-semibold text-typography-primary font-mono">
                     {nomineeToDelete.displayName}
                   </span>{' '}
-                  ({nomineeToDelete.discordUsername})?
+                  (@{cleanDiscord(nomineeToDelete.discordUsername)})?
                 </p>
                 <p className="text-[11px] text-rose-400/80 mt-2">
                   Notice: Nominees that have already received votes in submitted ballots cannot be deleted. If votes have been cast, deactivate them instead.
@@ -514,11 +510,11 @@ export const AdminNominees = () => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-surface-border">
+            <div className="flex justify-end gap-2.5 pt-3 border-t border-surface-border">
               <button
                 type="button"
                 onClick={() => setNomineeToDelete(null)}
-                className="px-4 py-2 text-xs text-typography-secondary hover:text-typography-primary"
+                className="px-4 py-2 rounded-xl text-xs text-typography-secondary hover:text-typography-primary hover:bg-[#181510] transition cursor-pointer"
                 disabled={deleting}
               >
                 Cancel
@@ -527,7 +523,7 @@ export const AdminNominees = () => {
                 type="button"
                 onClick={handleDeleteNominee}
                 disabled={deleting}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-display font-medium text-xs uppercase tracking-wider transition disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-sans font-semibold text-xs uppercase tracking-wider transition disabled:opacity-50 cursor-pointer shadow-sm"
               >
                 {deleting ? 'Deleting...' : 'Confirm Delete'}
               </button>
@@ -539,13 +535,13 @@ export const AdminNominees = () => {
       {/* DELETE ALL NOMINEES CONFIRMATION MODAL */}
       {showDeleteAllModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-surface-card border border-rose-500/40 p-6 space-y-4">
+          <div className="max-w-md w-full bg-surface-card border border-rose-900/60 rounded-2xl p-6 space-y-4 shadow-2xl">
             <div className="flex items-start gap-3">
-              <div className="p-2.5 bg-rose-500/10 border border-rose-500/30 text-rose-400">
+              <div className="p-2.5 bg-rose-950/40 border border-rose-800/40 text-rose-400 rounded-xl">
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div className="flex-1">
-                <h3 className="font-display font-semibold text-lg text-typography-primary uppercase">
+                <h3 className="font-playfair font-bold text-lg text-typography-primary uppercase">
                   Purge All Nominees?
                 </h3>
                 <p className="text-xs text-typography-secondary mt-1">
@@ -557,11 +553,11 @@ export const AdminNominees = () => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-surface-border">
+            <div className="flex justify-end gap-2.5 pt-3 border-t border-surface-border">
               <button
                 type="button"
                 onClick={() => setShowDeleteAllModal(false)}
-                className="px-4 py-2 text-xs text-typography-secondary hover:text-typography-primary"
+                className="px-4 py-2 rounded-xl text-xs text-typography-secondary hover:text-typography-primary hover:bg-[#181510] transition cursor-pointer"
                 disabled={deleting}
               >
                 Cancel
@@ -570,7 +566,7 @@ export const AdminNominees = () => {
                 type="button"
                 onClick={handleDeleteAllNominees}
                 disabled={deleting}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-display font-medium text-xs uppercase tracking-wider transition disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-sans font-semibold text-xs uppercase tracking-wider transition disabled:opacity-50 cursor-pointer shadow-sm"
               >
                 {deleting ? 'Purging All...' : 'Purge All Nominees'}
               </button>
@@ -581,3 +577,5 @@ export const AdminNominees = () => {
     </div>
   );
 };
+
+export default AdminNominees;

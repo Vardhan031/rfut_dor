@@ -26,7 +26,7 @@ export const createNominee = async ({ displayName, discordUsername, imageUrl, de
   const nominee = await Nominee.create({
     displayName: displayName.trim(),
     discordUsername: discordUsername.trim(),
-    imageUrl: imageUrl ? imageUrl.trim() : 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=400&auto=format&fit=crop&q=80',
+    imageUrl: imageUrl ? imageUrl.trim() : '',
     description: description ? description.trim() : '',
     isActive: Boolean(isActive)
   });

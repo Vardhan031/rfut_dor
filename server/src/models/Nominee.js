@@ -15,7 +15,7 @@ const NomineeSchema = new mongoose.Schema(
     },
     imageUrl: {
       type: String,
-      required: true,
+      default: '',
       trim: true
     },
     description: {
