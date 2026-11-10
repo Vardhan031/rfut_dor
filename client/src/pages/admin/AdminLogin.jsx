@@ -66,9 +66,9 @@ export const AdminLogin = () => {
                 type="text"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="notapro@dor.com"
+                placeholder="uhridfc@gmail.com"
                 className="w-full pl-9 pr-3 py-2.5 bg-[#0A0907] border border-[#4A3D24] rounded-xl text-sm text-[#F5F0E6] focus:outline-none focus:border-[#D4AF57] transition-colors placeholder:text-stone-600"
-                autoComplete="username email"
+                autoComplete="off"
               />
             </div>
           </div>
