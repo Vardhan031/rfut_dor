@@ -66,15 +66,9 @@ export const AdminBallots = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border pb-6">
         <div>
-          <span className="text-[11px] font-sans font-semibold uppercase tracking-widest text-[#D4AF57] block mb-1">
-            Governance &bull; Ballot Ledger
-          </span>
           <h1 className="font-playfair font-bold text-3xl sm:text-4xl text-typography-primary uppercase tracking-wide">
             Submitted Ballots Audit
           </h1>
-          <p className="text-typography-secondary text-sm font-sans mt-0.5">
-            Audit individual voter submissions, complete Top 10 rankings, and point allocations.
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -127,9 +121,6 @@ export const AdminBallots = () => {
               <tr>
                 <th className="py-3.5 px-4">Voter Handle</th>
                 <th className="py-3.5 px-4">Category</th>
-                <th className="py-3.5 px-4">1st Place (15 pts)</th>
-                <th className="py-3.5 px-4">2nd Place (12 pts)</th>
-                <th className="py-3.5 px-4">3rd Place (10 pts)</th>
                 <th className="py-3.5 px-4">Submitted At</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
@@ -137,22 +128,18 @@ export const AdminBallots = () => {
             <tbody className="divide-y divide-surface-border/60">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-typography-muted">
+                  <td colSpan={4} className="py-12 text-center text-typography-muted">
                     Loading audit records...
                   </td>
                 </tr>
               ) : filteredBallots.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-typography-muted">
+                  <td colSpan={4} className="py-12 text-center text-typography-muted">
                     No submitted ballots found.
                   </td>
                 </tr>
               ) : (
                 filteredBallots.map((b) => {
-                  const rank1 = b.rankings.find((r) => r.rank === 1)?.nomineeId;
-                  const rank2 = b.rankings.find((r) => r.rank === 2)?.nomineeId;
-                  const rank3 = b.rankings.find((r) => r.rank === 3)?.nomineeId;
-
                   return (
                     <tr key={b._id} className="hover:bg-surface-hover/70 transition-colors">
                       <td className="py-3 px-4 font-mono font-medium text-typography-primary">
@@ -161,21 +148,6 @@ export const AdminBallots = () => {
                       <td className="py-3 px-4">
                         <span className="px-2 py-0.5 rounded text-[10px] uppercase font-sans font-medium bg-surface-muted text-[#D4AF57] border border-surface-border">
                           {(b.voterId?.category === 'Journo' ? 'Journalist' : b.voterId?.category) || 'Member'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="font-playfair font-medium text-[#D4AF57] uppercase tracking-wide">
-                          {rank1?.displayName || 'Unknown'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="font-playfair font-medium text-[#D4AF57] uppercase tracking-wide">
-                          {rank2?.displayName || 'Unknown'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="font-playfair font-medium text-typography-primary uppercase tracking-wide">
-                          {rank3?.displayName || 'Unknown'}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-typography-secondary font-mono text-[11px]">
