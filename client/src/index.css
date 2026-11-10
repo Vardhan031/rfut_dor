@@ -46,3 +46,66 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Admin Panel Theme
+   Slightly elevated, brighter charcoal/obsidian tones with crisp gold-bronze borders
+   (Only applies to admin routes wrapped by .admin-theme)
+───────────────────────────────────────────────────────────────────────────── */
+.admin-theme {
+  background-color: #14120E !important;
+  color: #F7F3EB !important;
+}
+
+.admin-theme .bg-background {
+  background-color: #16130E !important;
+}
+
+.admin-theme .bg-surface {
+  background-color: #1A1712 !important;
+}
+
+.admin-theme .bg-surface-card {
+  background-color: #1E1B15 !important;
+}
+
+.admin-theme .hover\:bg-surface-hover:hover {
+  background-color: #2B251D !important;
+}
+
+.admin-theme .border-surface-border {
+  border-color: #423825 !important;
+}
+
+.admin-theme .text-typography-secondary {
+  color: #BDB4A3 !important;
+}
+
+.admin-theme .text-typography-muted {
+  color: #8C8270 !important;
+}
+
+.admin-theme thead {
+  background-color: #1A1611 !important;
+}
+
+.admin-theme tbody tr {
+  transition: background-color 150ms ease;
+}
+
+.admin-theme tbody tr:hover {
+  background-color: rgba(212, 175, 87, 0.05) !important;
+}
+
+.admin-theme input,
+.admin-theme textarea {
+  background-color: #181510 !important;
+  border-color: #423825 !important;
+  color: #F7F3EB !important;
+}
+
+.admin-theme input:focus,
+.admin-theme textarea:focus {
+  border-color: #D4AF57 !important;
+  box-shadow: 0 0 0 1px rgba(212, 175, 87, 0.3) !important;
+}

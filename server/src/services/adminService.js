@@ -79,8 +79,8 @@ export const getDashboardOverview = async () => {
     Voter.countDocuments({ category: 'Regular Member' }),
     Voter.countDocuments({ category: 'Staff', hasVoted: true }),
     Voter.countDocuments({ category: 'Staff' }),
-    Voter.countDocuments({ category: 'Journo', hasVoted: true }),
-    Voter.countDocuments({ category: 'Journo' })
+    Voter.countDocuments({ category: { $in: ['Journalist', 'Journo'] }, hasVoted: true }),
+    Voter.countDocuments({ category: { $in: ['Journalist', 'Journo'] } })
   ]);
 
   return {
@@ -94,6 +94,7 @@ export const getDashboardOverview = async () => {
     categoryBreakdown: {
       regular: { voted: regularVoted, total: regularTotal },
       staff: { voted: staffVoted, total: staffTotal },
+      journalist: { voted: journoVoted, total: journoTotal },
       journo: { voted: journoVoted, total: journoTotal }
     }
   };

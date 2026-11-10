@@ -56,7 +56,8 @@ export const SuccessPage = () => {
   };
 
   const voterName = voter?.discordUsername || submittedReceipt?.voterDiscord || 'Voter';
-  const voterCategory = voter?.category || submittedReceipt?.category || 'Regular Member';
+  const rawCat = voter?.category || submittedReceipt?.category || 'Regular Member';
+  const voterCategory = rawCat === 'Journo' ? 'Journalist' : rawCat;
   const ballotId = submittedReceipt?.ballotId || (voter?._id ? `BALLOT-${voter._id.toString().slice(-8).toUpperCase()}` : 'OFFICIAL-BALLOT-2026');
   const dateStr = submittedReceipt?.submittedAt
     ? new Date(submittedReceipt.submittedAt).toUTCString()

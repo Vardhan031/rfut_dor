@@ -22,6 +22,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import ThemedSelect from '../../components/ui/ThemedSelect';
 
 export const AdminVoters = () => {
   const [voters, setVoters] = useState([]);
@@ -376,15 +377,9 @@ export const AdminVoters = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border pb-6">
         <div>
-          <span className="text-[11px] font-sans font-semibold uppercase tracking-widest text-[#D4AF57] block mb-1">
-            Governance &bull; Voter Registry
-          </span>
           <h1 className="font-playfair font-bold text-3xl sm:text-4xl text-typography-primary uppercase tracking-wide">
             Voters & Codes
           </h1>
-          <p className="text-typography-secondary text-sm font-sans mt-0.5">
-            Issue, inspect, and manage authorized voters and single-use credentials.
-          </p>
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
@@ -413,15 +408,6 @@ export const AdminVoters = () => {
           >
             <FileSpreadsheet className="w-4 h-4 text-[#D4AF57]/80" />
             <span>Bulk Add</span>
-          </button>
-
-          {/* Export CSV Button */}
-          <button
-            onClick={handleExportVotersCsv}
-            className="px-3.5 py-2 rounded-xl border border-surface-border bg-surface-card hover:bg-surface-hover text-typography-secondary hover:text-typography-primary text-xs font-sans transition flex items-center gap-1.5 cursor-pointer"
-          >
-            <Download className="w-4 h-4" />
-            <span>Export CSV</span>
           </button>
 
           {/* Delete All Voters Button */}
@@ -456,32 +442,34 @@ export const AdminVoters = () => {
           />
         </div>
 
-        <select
+        <ThemedSelect
           value={category}
-          onChange={(e) => {
-            setCategory(e.target.value);
+          onChange={(val) => {
+            setCategory(val);
             setPage(1);
           }}
-          className="w-full sm:w-44 px-3 py-2 rounded-lg bg-background border border-surface-border text-xs font-sans text-typography-primary focus:outline-none focus:border-[#D4AF57]"
-        >
-          <option value="">All Categories</option>
-          <option value="Regular Member">Regular Member</option>
-          <option value="Staff">Staff</option>
-          <option value="Journo">Journo</option>
-        </select>
+          className="w-full sm:w-48"
+          options={[
+            { value: '', label: 'All Categories' },
+            { value: 'Regular Member', label: 'Regular Member' },
+            { value: 'Staff', label: 'Staff' },
+            { value: 'Journalist', label: 'Journalist' }
+          ]}
+        />
 
-        <select
+        <ThemedSelect
           value={status}
-          onChange={(e) => {
-            setStatus(e.target.value);
+          onChange={(val) => {
+            setStatus(val);
             setPage(1);
           }}
-          className="w-full sm:w-48 px-3 py-2 rounded-lg bg-background border border-surface-border text-xs font-sans text-typography-primary focus:outline-none focus:border-[#D4AF57]"
-        >
-          <option value="">All Ballot Statuses</option>
-          <option value="VOTED">Ballot Submitted (Voted)</option>
-          <option value="PENDING">Ballot Pending</option>
-        </select>
+          className="w-full sm:w-56"
+          options={[
+            { value: '', label: 'All Ballot Statuses' },
+            { value: 'VOTED', label: 'Ballot Submitted (Voted)' },
+            { value: 'PENDING', label: 'Ballot Pending' }
+          ]}
+        />
       </div>
 
       {/* Table */}
@@ -522,7 +510,7 @@ export const AdminVoters = () => {
                     {/* Category */}
                     <td className="py-3 px-4">
                       <span className="px-2 py-0.5 rounded text-[10px] font-sans font-medium uppercase tracking-wider bg-surface-muted text-[#D4AF57] border border-surface-border">
-                        {v.category}
+                        {v.category === 'Journo' ? 'Journalist' : v.category}
                       </span>
                     </td>
 
@@ -697,7 +685,7 @@ export const AdminVoters = () => {
               </h3>
               <div className="flex items-center gap-2 mt-2">
                 <span className="px-2 py-0.5 rounded text-[10px] font-sans font-medium uppercase tracking-wider bg-[#1A1813] text-[#D4AF57] border border-[#4A3D24]">
-                  {selectedVoterForCode.category}
+                  {selectedVoterForCode.category === 'Journo' ? 'Journalist' : selectedVoterForCode.category}
                 </span>
                 {selectedVoterForCode.hasVoted ? (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-sans font-medium uppercase tracking-wider bg-emerald-950/40 text-emerald-300 border border-emerald-800/40 flex items-center gap-1">
@@ -997,15 +985,16 @@ export const AdminVoters = () => {
                   <label className="block text-xs font-medium uppercase tracking-wider text-typography-secondary mb-1">
                     Category
                   </label>
-                  <select
+                  <ThemedSelect
                     value={singleCategory}
-                    onChange={(e) => setSingleCategory(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-lg bg-background border border-surface-border text-sm text-typography-primary focus:outline-none focus:border-[#D4AF57]"
-                  >
-                    <option value="Regular Member">Regular Member</option>
-                    <option value="Staff">Staff</option>
-                    <option value="Journo">Journo</option>
-                  </select>
+                    onChange={(val) => setSingleCategory(val)}
+                    options={[
+                      { value: 'Regular Member', label: 'Regular Member' },
+                      { value: 'Staff', label: 'Staff' },
+                      { value: 'Journalist', label: 'Journalist' }
+                    ]}
+                    className="w-full"
+                  />
                 </div>
 
                 <div className="flex items-center gap-2 pt-1">
@@ -1095,15 +1084,16 @@ export const AdminVoters = () => {
                   <label className="block text-xs font-medium uppercase tracking-wider text-typography-secondary mb-1">
                     Assign Category
                   </label>
-                  <select
+                  <ThemedSelect
                     value={bulkCategory}
-                    onChange={(e) => setBulkCategory(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-background border border-surface-border text-xs text-typography-primary focus:outline-none focus:border-[#D4AF57]"
-                  >
-                    <option value="Regular Member">Regular Member</option>
-                    <option value="Staff">Staff</option>
-                    <option value="Journo">Journo</option>
-                  </select>
+                    onChange={(val) => setBulkCategory(val)}
+                    options={[
+                      { value: 'Regular Member', label: 'Regular Member' },
+                      { value: 'Staff', label: 'Staff' },
+                      { value: 'Journalist', label: 'Journalist' }
+                    ]}
+                    className="w-full"
+                  />
                 </div>
 
                 <div>

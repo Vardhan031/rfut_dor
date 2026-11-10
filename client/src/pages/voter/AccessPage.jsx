@@ -205,7 +205,7 @@ export const AccessPage = () => {
                     {voter.discordUsername}
                   </p>
                   <p className="text-xs text-[#A69D8B] font-sans uppercase tracking-wider">
-                    Category: <span className="text-[#E8C97B] font-semibold">{voter.category}</span>
+                    Category: <span className="text-[#E8C97B] font-semibold">{voter.category === 'Journo' ? 'Journalist' : voter.category}</span>
                   </p>
 
                   <button

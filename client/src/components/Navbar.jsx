@@ -118,7 +118,9 @@ export const Navbar = () => {
             <div className="flex items-center gap-3 pr-2 border-r border-[#3D3321]">
               <div className="flex flex-col text-right">
                 <span className="text-xs font-semibold text-typography-primary font-mono">{voter.discordUsername}</span>
-                <span className="text-[10px] uppercase font-mono text-[#D4AF57]">{voter.category}</span>
+                <span className="text-[10px] uppercase font-mono text-[#D4AF57]">
+                  {voter.category === 'Journo' ? 'Journalist' : voter.category}
+                </span>
               </div>
               <button
                 onClick={() => {
@@ -229,7 +231,9 @@ export const Navbar = () => {
               <div className="p-3 rounded-xl bg-[#16130E] border border-[#3D3321] flex items-center justify-between">
                 <div>
                   <span className="font-mono text-sm font-bold text-[#F5F0E6] block">{voter.discordUsername}</span>
-                  <span className="text-[10px] font-mono text-[#D4AF57] uppercase tracking-wider">{voter.category}</span>
+                  <span className="text-[10px] font-mono text-[#D4AF57] uppercase tracking-wider">
+                    {voter.category === 'Journo' ? 'Journalist' : voter.category}
+                  </span>
                 </div>
                 <button
                   onClick={() => {

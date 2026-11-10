@@ -49,7 +49,8 @@ export const generateSingleCode = async ({ discordUsername, category, generateCo
   }
 
   const trimmedUsername = discordUsername.trim();
-  const validCategory = VOTER_CATEGORIES.includes(category) ? category : 'Regular Member';
+  const normalizedCategory = category === 'Journo' ? 'Journalist' : category;
+  const validCategory = VOTER_CATEGORIES.includes(normalizedCategory) ? normalizedCategory : 'Regular Member';
 
   // Check if discord username already registered
   const existing = await Voter.findOne({ discordUsername: trimmedUsername });
@@ -166,7 +167,11 @@ export const getAllVoters = async ({ search = '', category = '', status = '', pa
   }
 
   if (category && category !== 'ALL') {
-    query.category = category;
+    if (category === 'Journalist' || category === 'Journo') {
+      query.category = { $in: ['Journalist', 'Journo'] };
+    } else {
+      query.category = category;
+    }
   }
 
   if (status === 'VOTED') {

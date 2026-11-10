@@ -29,7 +29,7 @@ export const AdminLayout = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-typography-primary">
+    <div className="admin-theme min-h-screen flex flex-col bg-background text-typography-primary">
       <Navbar />
 
       {/* Admin Subheader Navigation */}

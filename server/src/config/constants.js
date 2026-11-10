@@ -14,7 +14,7 @@ export const RANK_POINTS = {
 export const TOTAL_RANKINGS_REQUIRED = 10;
 export const TOTAL_BALLOT_POINTS = 67;
 
-export const VOTER_CATEGORIES = ['Regular Member', 'Staff', 'Journo'];
+export const VOTER_CATEGORIES = ['Regular Member', 'Staff', 'Journalist', 'Journo'];
 
 export const CODE_STATUS = {
   ASSIGNED: 'Assigned',

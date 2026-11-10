@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { Search, Eye, X, Trash2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import ThemedSelect from '../../components/ui/ThemedSelect';
 
 export const AdminBallots = () => {
   const [ballots, setBallots] = useState([]);
@@ -53,7 +54,10 @@ export const AdminBallots = () => {
     const term = search.toLowerCase().trim();
     const voter = b.voterId;
     const matchUser = voter?.discordUsername?.toLowerCase().includes(term);
-    const matchCategory = !categoryFilter || voter?.category === categoryFilter;
+    const matchCategory =
+      !categoryFilter ||
+      voter?.category === categoryFilter ||
+      (categoryFilter === 'Journalist' && (voter?.category === 'Journo' || voter?.category === 'Journalist'));
     return matchUser && matchCategory;
   });
 
@@ -102,16 +106,17 @@ export const AdminBallots = () => {
           />
         </div>
 
-        <select
+        <ThemedSelect
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="w-full sm:w-48 px-3 py-2 rounded-lg bg-background border border-surface-border text-xs font-sans text-typography-primary focus:outline-none focus:border-[#D4AF57]"
-        >
-          <option value="">All Categories</option>
-          <option value="Regular Member">Regular Member</option>
-          <option value="Staff">Staff</option>
-          <option value="Journo">Journo</option>
-        </select>
+          onChange={(val) => setCategoryFilter(val)}
+          className="w-full sm:w-48"
+          options={[
+            { value: '', label: 'All Categories' },
+            { value: 'Regular Member', label: 'Regular Member' },
+            { value: 'Staff', label: 'Staff' },
+            { value: 'Journalist', label: 'Journalist' }
+          ]}
+        />
       </div>
 
       {/* Ballots Table */}
@@ -155,7 +160,7 @@ export const AdminBallots = () => {
                       </td>
                       <td className="py-3 px-4">
                         <span className="px-2 py-0.5 rounded text-[10px] uppercase font-sans font-medium bg-surface-muted text-[#D4AF57] border border-surface-border">
-                          {b.voterId?.category || 'Member'}
+                          {(b.voterId?.category === 'Journo' ? 'Journalist' : b.voterId?.category) || 'Member'}
                         </span>
                       </td>
                       <td className="py-3 px-4">
@@ -219,7 +224,7 @@ export const AdminBallots = () => {
                   {selectedBallot.voterId?.discordUsername || 'Voter'}'s Top 10 Ballot
                 </h3>
                 <p className="text-xs text-typography-secondary mt-0.5">
-                  Category: <strong className="text-typography-primary">{selectedBallot.voterId?.category}</strong> &bull; Submitted: {new Date(selectedBallot.submittedAt).toLocaleString()}
+                  Category: <strong className="text-typography-primary">{selectedBallot.voterId?.category === 'Journo' ? 'Journalist' : selectedBallot.voterId?.category}</strong> &bull; Submitted: {new Date(selectedBallot.submittedAt).toLocaleString()}
                 </p>
               </div>
 

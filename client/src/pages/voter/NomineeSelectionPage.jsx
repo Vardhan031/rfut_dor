@@ -85,7 +85,7 @@ export const NomineeSelectionPage = () => {
               <span className="text-[9px] text-[#706859] uppercase tracking-widest block font-mono">Verified Voter</span>
               <span className="text-xs font-mono font-semibold text-[#F5F0E6]">{voter.discordUsername}</span>
               <span className="text-[10px] text-[#D4AF57] ml-2 uppercase font-mono">
-                [{voter.category}]
+                [{voter.category === 'Journo' ? 'Journalist' : voter.category}]
               </span>
             </div>
           )}
