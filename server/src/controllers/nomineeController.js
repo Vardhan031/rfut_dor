@@ -100,3 +100,13 @@ export const deleteAllNominees = async (req, res, next) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const bulkCreateNominees = async (req, res, next) => {
+  try {
+    const { nominees } = req.body;
+    const result = await nomineeService.bulkCreateNominees(nominees);
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

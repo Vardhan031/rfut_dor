@@ -10,6 +10,7 @@ router.get('/admin', authAdmin, nomineeController.getAdminNominees);
 
 // Protected admin nominee management
 router.post('/', authAdmin, nomineeController.createNominee);
+router.post('/bulk', authAdmin, nomineeController.bulkCreateNominees);
 router.delete('/all', authAdmin, nomineeController.deleteAllNominees);
 router.put('/:id', authAdmin, nomineeController.updateNominee);
 router.delete('/:id', authAdmin, nomineeController.deleteNominee);

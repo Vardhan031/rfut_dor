@@ -84,3 +84,65 @@ export const deleteAllNominees = async () => {
     deletedCount: result.deletedCount
   };
 };
+
+export const bulkCreateNominees = async (nomineesList) => {
+  if (!Array.isArray(nomineesList) || nomineesList.length === 0) {
+    throw new Error('Please provide a non-empty list of nominees.');
+  }
+
+  const created = [];
+  const errors = [];
+
+  for (const item of nomineesList) {
+    const displayName = (item.displayName || item.name || '').trim();
+    let discordUsername = (item.discordUsername || item.discord || '').trim().replace(/^@/, '');
+
+    if (!displayName || !discordUsername) {
+      errors.push({
+        entry: displayName || discordUsername || 'Empty Entry',
+        reason: 'Both candidate name and Discord username are required.'
+      });
+      continue;
+    }
+
+    try {
+      const existing = await Nominee.findOne({
+        $or: [
+          { discordUsername: discordUsername },
+          { discordUsername: `@${discordUsername}` }
+        ]
+      });
+
+      if (existing) {
+        errors.push({
+          entry: `${displayName} (@${discordUsername})`,
+          reason: 'A candidate with this Discord handle already exists.'
+        });
+        continue;
+      }
+
+      const nominee = await Nominee.create({
+        displayName,
+        discordUsername,
+        imageUrl: '',
+        description: '',
+        isActive: true
+      });
+
+      created.push(nominee);
+    } catch (err) {
+      errors.push({
+        entry: `${displayName} (@${discordUsername})`,
+        reason: err.message
+      });
+    }
+  }
+
+  return {
+    success: true,
+    createdCount: created.length,
+    errorCount: errors.length,
+    created,
+    errors
+  };
+};

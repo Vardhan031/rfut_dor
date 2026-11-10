@@ -12,7 +12,9 @@ import {
   CheckCircle2,
   XCircle,
   Sparkles,
-  ShieldAlert
+  ShieldAlert,
+  Users,
+  FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -35,6 +37,12 @@ export const AdminNominees = () => {
   const [nomineeToDelete, setNomineeToDelete] = useState(null);
   const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Bulk Add Modal
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkText, setBulkText] = useState('');
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkResult, setBulkResult] = useState(null);
 
   const fetchNominees = async () => {
     try {
@@ -106,6 +114,80 @@ export const AdminNominees = () => {
       toast.error(err.response?.data?.message || 'Failed to save nominee.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const parseBulkLines = (text) => {
+    const lines = text.split('\n');
+    const items = [];
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith('#') || line.startsWith('//')) continue;
+
+      let name = '';
+      let discord = '';
+
+      if (line.includes(',')) {
+        const parts = line.split(',');
+        name = parts[0].trim();
+        discord = parts.slice(1).join(',').trim();
+      } else if (line.includes('|')) {
+        const parts = line.split('|');
+        name = parts[0].trim();
+        discord = parts.slice(1).join('|').trim();
+      } else if (line.includes('\t')) {
+        const parts = line.split('\t');
+        name = parts[0].trim();
+        discord = parts.slice(1).join('\t').trim();
+      } else if (line.includes(' - ')) {
+        const parts = line.split(' - ');
+        name = parts[0].trim();
+        discord = parts.slice(1).join(' - ').trim();
+      } else if (line.includes(':')) {
+        const parts = line.split(':');
+        name = parts[0].trim();
+        discord = parts.slice(1).join(':').trim();
+      } else {
+        const words = line.split(/\s+/);
+        if (words.length >= 2) {
+          discord = words[words.length - 1].trim();
+          name = words.slice(0, words.length - 1).join(' ').trim();
+        } else {
+          name = line;
+          discord = line;
+        }
+      }
+
+      discord = discord.replace(/^@/, '');
+      if (name && discord) {
+        items.push({ displayName: name, discordUsername: discord });
+      }
+    }
+    return items;
+  };
+
+  const handleBulkSubmit = async (e) => {
+    e.preventDefault();
+    const parsed = parseBulkLines(bulkText);
+    if (parsed.length === 0) {
+      toast.warning('Please enter at least one valid nominee entry (Name, discord_username).');
+      return;
+    }
+
+    setBulkLoading(true);
+    try {
+      const res = await api.post('/nominees/bulk', { nominees: parsed });
+      if (res.data?.success) {
+        setBulkResult(res.data);
+        fetchNominees();
+        if (res.data.createdCount > 0) {
+          toast.success(`Successfully registered ${res.data.createdCount} new candidate(s)!`);
+        }
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to bulk add nominees.');
+    } finally {
+      setBulkLoading(false);
     }
   };
 
@@ -193,6 +275,19 @@ export const AdminNominees = () => {
               <span>Delete All Nominees</span>
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={() => {
+              setBulkText('');
+              setBulkResult(null);
+              setShowBulkModal(true);
+            }}
+            className="px-4 py-2 rounded-xl bg-surface-card hover:bg-surface-hover text-typography-primary border border-surface-border hover:border-[#D4AF57]/60 font-sans font-medium text-xs uppercase tracking-wider flex items-center gap-2 transition cursor-pointer active:scale-95 shadow-sm"
+          >
+            <Users className="w-4 h-4 text-[#D4AF57]" />
+            <span>Bulk Add</span>
+          </button>
 
           <button
             onClick={openAddModal}
@@ -540,6 +635,135 @@ export const AdminNominees = () => {
                 {deleting ? 'Purging All...' : 'Purge All Nominees'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* BULK ADD NOMINEES MODAL */}
+      {showBulkModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="max-w-xl w-full bg-surface-card border border-surface-border rounded-2xl p-6 relative space-y-4 font-sans shadow-2xl">
+            <button
+              onClick={() => setShowBulkModal(false)}
+              className="absolute top-4 right-4 text-typography-muted hover:text-typography-primary p-1 rounded-lg hover:bg-[#181510] transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <span className="text-[10px] font-mono font-semibold uppercase tracking-widest text-[#D4AF57] block mb-0.5">
+                Bulk Registry
+              </span>
+              <h3 className="font-playfair font-bold text-xl uppercase tracking-wide text-typography-primary">
+                Bulk Add Nominees
+              </h3>
+              <p className="text-xs text-typography-secondary mt-1">
+                Paste multiple candidates at once. Enter one candidate per line.
+              </p>
+            </div>
+
+            {!bulkResult ? (
+              <form onSubmit={handleBulkSubmit} className="space-y-4 pt-1 font-sans">
+                {/* Format Helper Box */}
+                <div className="p-3.5 rounded-xl bg-[#14120E] border border-surface-border/80 text-xs space-y-1.5">
+                  <div className="flex items-center gap-2 text-[#D4AF57] font-semibold text-[11px] uppercase tracking-wider">
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Accepted Line Formats:</span>
+                  </div>
+                  <p className="text-typography-secondary text-[11px] font-mono leading-relaxed">
+                    Candidate Name, discord_username<br />
+                    Candidate Name | discord_username<br />
+                    Candidate Name - discord_username
+                  </p>
+                  <p className="text-[10px] text-typography-muted">
+                    Example: <code className="text-[#E8C97B]">Erling Haaland, haaland9</code> or <code className="text-[#E8C97B]">Kylian Mbappe, @k.mbappe</code>
+                  </p>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-medium uppercase tracking-wider text-typography-secondary">
+                      Paste Nominee List
+                    </label>
+                    <span className="text-[10px] font-mono text-[#D4AF57]">
+                      {parseBulkLines(bulkText).length} valid candidate(s) detected
+                    </span>
+                  </div>
+                  <textarea
+                    rows={8}
+                    value={bulkText}
+                    onChange={(e) => setBulkText(e.target.value)}
+                    placeholder={"Kylian Mbappe, mbappe_9\nErling Haaland, @haaland\nJude Bellingham | bellingham5\nVinicius Jr - vini_jr"}
+                    className="w-full p-3.5 rounded-xl bg-background border border-surface-border text-xs text-typography-primary focus:outline-none focus:border-[#D4AF57] focus:ring-1 focus:ring-[#D4AF57]/30 transition font-mono leading-relaxed placeholder:text-stone-700"
+                    required
+                  ></textarea>
+                </div>
+
+                <div className="pt-3 border-t border-surface-border flex justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkModal(false)}
+                    className="px-4 py-2 rounded-xl text-xs text-typography-secondary hover:text-typography-primary hover:bg-[#181510] transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={bulkLoading || parseBulkLines(bulkText).length === 0}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0A0907] font-sans font-bold text-xs uppercase tracking-wider shadow-sm transition disabled:opacity-50 cursor-pointer"
+                  >
+                    {bulkLoading
+                      ? 'Importing...'
+                      : `Import ${parseBulkLines(bulkText).length} Nominee${parseBulkLines(bulkText).length === 1 ? '' : 's'}`}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              /* Success / Result Summary View */
+              <div className="space-y-4 pt-2">
+                <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-800/40 text-emerald-300 text-xs flex items-start gap-2.5">
+                  <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-400 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-sm text-emerald-200">
+                      Import Complete!
+                    </p>
+                    <p className="mt-0.5">
+                      Successfully registered <strong>{bulkResult.createdCount}</strong> candidate(s) to the shortlist.
+                    </p>
+                  </div>
+                </div>
+
+                {bulkResult.errors?.length > 0 && (
+                  <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-800/40 text-xs space-y-2">
+                    <p className="font-semibold text-amber-300 text-[11px] uppercase tracking-wider">
+                      Skipped Entries ({bulkResult.errors.length}):
+                    </p>
+                    <div className="max-h-40 overflow-y-auto space-y-1 pr-1 font-mono text-[11px]">
+                      {bulkResult.errors.map((err, idx) => (
+                        <div key={idx} className="flex items-center justify-between py-1 border-b border-amber-900/20 text-typography-secondary">
+                          <span className="font-semibold text-typography-primary">{err.entry}</span>
+                          <span className="text-rose-400 text-[10px]">{err.reason}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-3 border-t border-surface-border flex justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBulkResult(null);
+                      setBulkText('');
+                      setShowBulkModal(false);
+                    }}
+                    className="px-5 py-2.5 rounded-xl bg-[#D4AF57] hover:bg-[#E8C97B] text-[#0A0907] font-sans font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-sm"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
