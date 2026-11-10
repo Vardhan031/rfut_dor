@@ -165,12 +165,21 @@ export const PublicNomineesPage = () => {
                       </span>
                     </div>
 
-                    {/* Main Name & Discord Handle */}
-                    <div className="mt-5 mb-1.5">
-                      <h3 className="font-playfair font-bold text-3xl sm:text-4xl text-[#F5F0E6] tracking-tight truncate leading-normal pb-2 group-hover:text-[#FFF4D0] transition-colors">
+                    {/* Main Name & Discord Handle with Adaptive Scaling to prevent ellipsis overflow */}
+                    <div className="mt-4 mb-1 min-h-[72px] sm:min-h-[82px] flex flex-col justify-center">
+                      <h3
+                        title={nominee.displayName}
+                        className={`font-playfair font-bold lining-nums text-[#F5F0E6] tracking-tight break-words line-clamp-2 leading-snug pb-1 group-hover:text-[#FFF4D0] transition-colors ${
+                          (nominee.displayName || '').length > 16
+                            ? 'text-xl sm:text-2xl'
+                            : (nominee.displayName || '').length > 10
+                            ? 'text-2xl sm:text-3xl'
+                            : 'text-3xl sm:text-4xl'
+                        }`}
+                      >
                         {nominee.displayName}
                       </h3>
-                      <p className="text-sm font-sans text-[#A69D8B] mt-0.5 font-normal truncate pb-1">
+                      <p className="text-xs sm:text-sm font-sans text-[#A69D8B] mt-0.5 font-normal truncate pb-0.5">
                         {cleanDiscordHandle}
                       </p>
                     </div>

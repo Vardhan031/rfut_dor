@@ -43,13 +43,20 @@ export const NomineeCard = ({ nominee, isSelected, rank, onToggle, disabled }) =
           )}
         </div>
 
-        {/* Candidate Info with Luxury Serif Heading */}
-        <h3 className="font-playfair font-bold text-xl sm:text-2xl tracking-tight text-[#F5F0E6] group-hover:text-[#FFF4D0] transition-colors truncate leading-normal pb-1.5">
-          {nominee.displayName}
-        </h3>
-        <p className="text-xs text-[#A69D8B] font-mono truncate mt-0.5 sm:mt-1 pb-0.5">
-          {cleanDiscordHandle}
-        </p>
+        {/* Candidate Info with Luxury Serif Heading and Uniform Height */}
+        <div className="min-h-[56px] sm:min-h-[62px] flex flex-col justify-center">
+          <h3
+            title={nominee.displayName}
+            className={`font-playfair font-bold lining-nums tracking-tight text-[#F5F0E6] group-hover:text-[#FFF4D0] transition-colors break-words line-clamp-2 leading-snug pb-1 ${
+              (nominee.displayName || '').length > 15 ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'
+            }`}
+          >
+            {nominee.displayName}
+          </h3>
+          <p className="text-xs text-[#A69D8B] font-mono truncate mt-0.5 pb-0.5">
+            {cleanDiscordHandle}
+          </p>
+        </div>
       </div>
 
       {/* Action Footer */}
