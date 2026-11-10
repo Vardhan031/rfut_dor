@@ -60,29 +60,8 @@ export const AdminDashboard = () => {
     }
   };
 
-  const handleToggleAnnouncement = async () => {
-    if (!data) return;
-    const newState = !data.resultsAnnounced;
-    const confirmText = newState
-      ? 'Officially announce the results and reveal the winner?'
-      : 'Return results to confidential admin-only status?';
-
-    if (!window.confirm(confirmText)) return;
-
-    setUpdatingControl(true);
-    try {
-      const res = await api.post('/admin/controls', {
-        resultsAnnounced: newState
-      });
-      if (res.data?.success) {
-        setData((prev) => ({ ...prev, resultsAnnounced: newState }));
-        toast.success(`Results status changed to: ${newState ? 'OFFICIALLY ANNOUNCED' : 'CONFIDENTIAL'}`);
-      }
-    } catch (err) {
-      toast.error('Failed to update announcement state.');
-    } finally {
-      setUpdatingControl(false);
-    }
+  const handleToggleAnnouncement = () => {
+    toast.info('Feature coming soon: Official winner announcement will be unlocked during the live ceremony.');
   };
 
   if (loading && !data) {
@@ -96,13 +75,10 @@ export const AdminDashboard = () => {
   return (
     <div className="space-y-8 max-w-5xl mx-auto py-2 font-sans">
       {/* Page Title */}
-      <div className="border-b border-surface-border pb-6 space-y-1">
+      <div className="border-b border-surface-border pb-6">
         <h1 className="font-playfair font-bold text-3xl sm:text-4xl text-typography-primary uppercase tracking-wide">
           Overview
         </h1>
-        <p className="text-typography-secondary text-xs sm:text-sm font-sans">
-          Current participation figures and governance controls for the awards ceremony.
-        </p>
       </div>
 
       {/* 4 Essential Statistics Cards */}
@@ -251,15 +227,10 @@ export const AdminDashboard = () => {
 
             <button
               onClick={handleToggleAnnouncement}
-              disabled={updatingControl}
-              className={`w-full sm:w-auto py-2.5 px-5 rounded-xl font-sans font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap shadow-sm active:scale-95 ${
-                data?.resultsAnnounced
-                  ? 'border border-surface-border text-typography-secondary hover:text-typography-primary bg-[#181510] hover:bg-surface-hover'
-                  : 'bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0A0907] shadow-[0_2px_14px_rgba(212,175,87,0.3)]'
-              }`}
+              className="w-full sm:w-auto py-2.5 px-5 rounded-xl font-sans font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap shadow-sm active:scale-95 bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0A0907] shadow-[0_2px_14px_rgba(212,175,87,0.3)]"
             >
               <Radio className="w-3.5 h-3.5" />
-              <span>{data?.resultsAnnounced ? 'Conceal' : 'Announce Winner'}</span>
+              <span>Announce Winner</span>
             </button>
           </div>
         </div>

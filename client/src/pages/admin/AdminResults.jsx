@@ -31,29 +31,8 @@ export const AdminResults = () => {
     fetchResults();
   }, []);
 
-  const handleTogglePublish = async () => {
-    if (!data) return;
-    const newState = !data.resultsAnnounced;
-    const promptMsg = newState
-      ? 'Officially announce the results and reveal the r/FUT d\'Or winner?'
-      : 'Return results to confidential admin-only status?';
-
-    if (!window.confirm(promptMsg)) return;
-
-    setUpdating(true);
-    try {
-      const res = await api.post('/admin/controls', {
-        resultsAnnounced: newState
-      });
-      if (res.data?.success) {
-        setData((prev) => ({ ...prev, resultsAnnounced: newState }));
-        toast.success(`Results status changed to: ${newState ? 'OFFICIALLY ANNOUNCED' : 'CONFIDENTIAL'}`);
-      }
-    } catch (err) {
-      toast.error('Failed to update announcement status.');
-    } finally {
-      setUpdating(false);
-    }
+  const handleTogglePublish = () => {
+    toast.info('Feature coming soon: Official winner announcement will be unlocked during the live ceremony.');
   };
 
   if (loading && !data) {
@@ -91,15 +70,10 @@ export const AdminResults = () => {
 
           <button
             onClick={handleTogglePublish}
-            disabled={updating}
-            className={`px-4 py-2 rounded-xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition duration-200 cursor-pointer shadow-sm active:scale-95 ${
-              data?.resultsAnnounced
-                ? 'bg-surface-muted border border-surface-border text-gold'
-                : 'bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0A0907] shadow-[0_2px_14px_rgba(212,175,87,0.3)]'
-            }`}
+            className="px-4 py-2 rounded-xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition duration-200 cursor-pointer shadow-sm active:scale-95 bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0A0907] shadow-[0_2px_14px_rgba(212,175,87,0.3)]"
           >
             <Radio className="w-4 h-4" />
-            <span>{data?.resultsAnnounced ? 'Officially Announced' : 'Announce Winner'}</span>
+            <span>Announce Winner</span>
           </button>
         </div>
       </div>
