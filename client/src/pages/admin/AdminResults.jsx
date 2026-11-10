@@ -3,11 +3,9 @@ import api from '../../services/api';
 import {
   Trophy,
   Download,
-  ShieldCheck,
   Radio,
   Crown,
-  RefreshCw,
-  Info
+  RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -98,26 +96,19 @@ export const AdminResults = () => {
   const top3 = leaderboard[2];
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-8 max-w-7xl mx-auto font-sans">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border pb-6">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gold/10 border border-gold/30 text-gold text-xs font-sans font-medium mb-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-gold" />
-            <span>CONFIDENTIAL &bull; CEREMONY STEWARD CLEARANCE</span>
-          </div>
-          <h1 className="font-display font-semibold text-3xl sm:text-4xl text-typography-primary uppercase tracking-wide">
+          <h1 className="font-playfair font-bold text-3xl sm:text-4xl text-typography-primary uppercase tracking-wide">
             Official Results & Standings
           </h1>
-          <p className="text-typography-secondary text-sm font-sans mt-0.5">
-            Calculated across {data?.totalBallots || 0} sealed ballots ({((data?.totalBallots || 0) * 67)} points total distributed).
-          </p>
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
             onClick={fetchResults}
-            className="p-2 rounded-none border border-surface-border hover:bg-surface-card text-typography-secondary hover:text-typography-primary transition"
+            className="p-2.5 rounded-xl border border-surface-border bg-surface-card hover:bg-surface-hover text-typography-secondary hover:text-typography-primary transition cursor-pointer active:scale-95 shadow-sm"
             title="Recalculate Scores"
           >
             <RefreshCw className="w-4 h-4" />
@@ -125,7 +116,7 @@ export const AdminResults = () => {
 
           <button
             onClick={exportResultsCsv}
-            className="px-3.5 py-2 rounded-none border border-surface-border bg-surface-card hover:bg-surface-hover text-typography-primary text-xs font-sans font-medium flex items-center gap-1.5 transition"
+            className="px-4 py-2 rounded-xl border border-surface-border bg-surface-card hover:bg-surface-hover text-typography-primary text-xs font-sans font-medium flex items-center gap-2 transition cursor-pointer active:scale-95 shadow-sm"
           >
             <Download className="w-4 h-4 text-gold/80" />
             <span>Export Standings CSV</span>
@@ -134,10 +125,10 @@ export const AdminResults = () => {
           <button
             onClick={handleTogglePublish}
             disabled={updating}
-            className={`px-4 py-2 rounded-none font-display font-medium text-xs uppercase tracking-wider flex items-center gap-2 transition duration-200 cursor-pointer shadow-sm ${
+            className={`px-4 py-2 rounded-xl font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition duration-200 cursor-pointer shadow-sm active:scale-95 ${
               data?.resultsAnnounced
                 ? 'bg-surface-muted border border-surface-border text-gold'
-                : 'bg-gold hover:bg-gold text-[#0B0A08]'
+                : 'bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0A0907] shadow-[0_2px_14px_rgba(212,175,87,0.3)]'
             }`}
           >
             <Radio className="w-4 h-4" />
@@ -146,86 +137,67 @@ export const AdminResults = () => {
         </div>
       </div>
 
-      {/* Protocol Banner */}
-      <div className="p-4 rounded-none bg-surface-card border border-surface-border flex items-start gap-3 text-xs font-sans text-typography-secondary">
-        <Info className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
-        <p className="leading-relaxed">
-          <strong className="text-typography-primary">Tie-Breaking Protocol:</strong> 1. Total Points &rarr; 2. Higher number of 1st-place votes &rarr; 3. Higher number of 2nd-place votes &rarr; 4. Higher number of 3rd-place votes &rarr; 5. Marked as Tied.
-        </p>
-      </div>
-
       {/* THE BALLON D'OR PODIUM */}
       {top1 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-end pt-2">
           {/* 2nd Place */}
           {top2 && (
-            <div className="order-2 md:order-1 p-6 rounded-none bg-surface-card border border-surface-border text-center space-y-3 relative shadow-sm">
-              <div className="w-9 h-9 mx-auto rounded-full bg-surface-muted text-gold font-display font-semibold text-base flex items-center justify-center border border-surface-border">
+            <div className="order-2 md:order-1 p-6 rounded-2xl bg-surface-card border border-surface-border text-center space-y-3.5 relative shadow-md">
+              <div className="w-10 h-10 mx-auto rounded-full bg-[#181510] text-[#E8C97B] font-playfair font-bold text-base flex items-center justify-center border border-[#423825]">
                 2
               </div>
-              <img
-                src={top2.imageUrl}
-                alt={top2.displayName}
-                className="w-20 h-20 mx-auto rounded-none object-cover border border-surface-border"
-              />
-              <div>
-                <h3 className="font-display font-semibold text-xl uppercase tracking-wide text-typography-primary">
+              <div className="pt-1">
+                <h3 className="font-playfair font-bold text-xl uppercase tracking-wide text-typography-primary">
                   {top2.displayName}
                 </h3>
-                <p className="text-xs text-typography-secondary font-mono">{top2.discordUsername}</p>
+                <p className="text-xs text-[#D4AF57] font-mono mt-0.5">@{top2.discordUsername?.replace(/^@/, '')}</p>
               </div>
               <div className="pt-3 border-t border-surface-border flex justify-around text-xs font-sans">
                 <div>
-                  <span className="text-[10px] text-typography-muted block uppercase">Points</span>
-                  <span className="font-display font-semibold text-lg text-gold">{top2.totalPoints}</span>
+                  <span className="text-[10px] text-typography-muted block uppercase tracking-wider">Points</span>
+                  <span className="font-playfair font-bold text-lg text-gold">{top2.totalPoints}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-typography-muted block uppercase">1st Votes</span>
-                  <span className="font-mono text-typography-primary">{top2.firstPlaceVotes}</span>
+                  <span className="text-[10px] text-typography-muted block uppercase tracking-wider">1st Votes</span>
+                  <span className="font-mono text-typography-primary font-medium">{top2.firstPlaceVotes}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-typography-muted block uppercase">Top 10s</span>
-                  <span className="font-mono text-typography-primary">{top2.top10Appearances}</span>
+                  <span className="text-[10px] text-typography-muted block uppercase tracking-wider">Top 10s</span>
+                  <span className="font-mono text-typography-primary font-medium">{top2.top10Appearances}</span>
                 </div>
               </div>
             </div>
           )}
 
           {/* 1st Place - r/FUT d'Or CHAMPION */}
-          <div className="order-1 md:order-2 p-7 rounded-3xl bg-surface-card border-2 border-gold text-center space-y-3.5 relative border border-surface-border">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gold text-[#0B0A08] px-3.5 py-0.5 rounded-full font-playfair font-bold text-[11px] tracking-wide flex items-center gap-1 shadow-sm">
+          <div className="order-1 md:order-2 p-7 rounded-2xl bg-surface-card border-2 border-[#D4AF57] text-center space-y-4 relative shadow-2xl">
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] text-[#0B0A08] px-4 py-0.5 rounded-full font-playfair font-bold text-[11px] tracking-wide flex items-center gap-1.5 shadow-md">
               <Crown className="w-3.5 h-3.5 fill-current" />
               <span>r/FUT d'Or 2026 WINNER</span>
             </div>
 
-            <div className="w-11 h-11 mx-auto rounded-full bg-gold text-[#0B0A08] font-display font-semibold text-xl flex items-center justify-center shadow-sm mt-1">
+            <div className="w-12 h-12 mx-auto rounded-full bg-gradient-to-br from-[#D4AF57] to-[#997A2C] text-[#0A0907] font-playfair font-bold text-xl flex items-center justify-center shadow-md mt-1">
               1
             </div>
 
-            <img
-              src={top1.imageUrl}
-              alt={top1.displayName}
-              className="w-28 h-28 mx-auto rounded-none object-cover border-2 border-gold shadow-md"
-            />
-
-            <div>
-              <h2 className="font-display font-semibold text-2xl uppercase tracking-wide text-gold">
+            <div className="pt-1">
+              <h2 className="font-playfair font-bold text-2xl uppercase tracking-wide text-gold">
                 {top1.displayName}
               </h2>
-              <p className="text-xs text-typography-secondary font-mono">{top1.discordUsername}</p>
+              <p className="text-xs text-[#E8C97B] font-mono mt-0.5">@{top1.discordUsername?.replace(/^@/, '')}</p>
             </div>
 
             <div className="pt-3.5 border-t border-surface-border flex justify-around text-xs font-sans">
               <div>
-                <span className="text-[10px] text-typography-muted block uppercase">Total Score</span>
-                <span className="font-display font-semibold text-2xl text-gold">{top1.totalPoints} pts</span>
+                <span className="text-[10px] text-typography-muted block uppercase tracking-wider">Total Score</span>
+                <span className="font-playfair font-bold text-2xl text-gold">{top1.totalPoints} pts</span>
               </div>
               <div>
-                <span className="text-[10px] text-typography-muted block uppercase">1st Place Votes</span>
+                <span className="text-[10px] text-typography-muted block uppercase tracking-wider">1st Place Votes</span>
                 <span className="font-mono font-medium text-typography-primary text-base">{top1.firstPlaceVotes}</span>
               </div>
               <div>
-                <span className="text-[10px] text-typography-muted block uppercase">Appearances</span>
+                <span className="text-[10px] text-typography-muted block uppercase tracking-wider">Appearances</span>
                 <span className="font-mono font-medium text-typography-primary text-base">{top1.top10Appearances}</span>
               </div>
             </div>
@@ -233,33 +205,28 @@ export const AdminResults = () => {
 
           {/* 3rd Place */}
           {top3 && (
-            <div className="order-3 p-6 rounded-none bg-surface-card border border-surface-border text-center space-y-3 relative shadow-sm">
-              <div className="w-9 h-9 mx-auto rounded-full bg-surface-muted text-gold-dark font-display font-semibold text-base flex items-center justify-center border border-surface-border">
+            <div className="order-3 p-6 rounded-2xl bg-surface-card border border-surface-border text-center space-y-3.5 relative shadow-md">
+              <div className="w-10 h-10 mx-auto rounded-full bg-[#181510] text-[#A68A38] font-playfair font-bold text-base flex items-center justify-center border border-[#423825]">
                 3
               </div>
-              <img
-                src={top3.imageUrl}
-                alt={top3.displayName}
-                className="w-20 h-20 mx-auto rounded-none object-cover border border-surface-border"
-              />
-              <div>
-                <h3 className="font-display font-semibold text-xl uppercase tracking-wide text-typography-primary">
+              <div className="pt-1">
+                <h3 className="font-playfair font-bold text-xl uppercase tracking-wide text-typography-primary">
                   {top3.displayName}
                 </h3>
-                <p className="text-xs text-typography-secondary font-mono">{top3.discordUsername}</p>
+                <p className="text-xs text-[#D4AF57] font-mono mt-0.5">@{top3.discordUsername?.replace(/^@/, '')}</p>
               </div>
               <div className="pt-3 border-t border-surface-border flex justify-around text-xs font-sans">
                 <div>
-                  <span className="text-[10px] text-typography-muted block uppercase">Points</span>
-                  <span className="font-display font-semibold text-lg text-[#C9A050]">{top3.totalPoints}</span>
+                  <span className="text-[10px] text-typography-muted block uppercase tracking-wider">Points</span>
+                  <span className="font-playfair font-bold text-lg text-[#C9A050]">{top3.totalPoints}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-typography-muted block uppercase">1st Votes</span>
-                  <span className="font-mono text-typography-primary">{top3.firstPlaceVotes}</span>
+                  <span className="text-[10px] text-typography-muted block uppercase tracking-wider">1st Votes</span>
+                  <span className="font-mono text-typography-primary font-medium">{top3.firstPlaceVotes}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-typography-muted block uppercase">Top 10s</span>
-                  <span className="font-mono text-typography-primary">{top3.top10Appearances}</span>
+                  <span className="text-[10px] text-typography-muted block uppercase tracking-wider">Top 10s</span>
+                  <span className="font-mono text-typography-primary font-medium">{top3.top10Appearances}</span>
                 </div>
               </div>
             </div>
@@ -268,19 +235,19 @@ export const AdminResults = () => {
       )}
 
       {/* FULL STANDINGS TABLE */}
-      <div className="bg-surface-card border border-surface-border rounded-none overflow-hidden border border-surface-border">
+      <div className="bg-surface-card border border-surface-border rounded-2xl overflow-hidden shadow-sm">
         <div className="p-4 border-b border-surface-border flex items-center justify-between font-sans">
-          <h3 className="font-display font-semibold text-lg text-typography-primary uppercase tracking-wide">
+          <h3 className="font-playfair font-bold text-lg text-typography-primary uppercase tracking-wide">
             Full Order of Merit
           </h3>
-          <span className="text-xs font-mono text-typography-secondary">
+          <span className="text-xs font-mono text-[#D4AF57]">
             {leaderboard.length} Shortlisted Candidates
           </span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs font-sans">
-            <thead className="bg-surface border-b border-surface-border text-typography-secondary font-medium uppercase tracking-wider text-[11px]">
+            <thead className="bg-[#181510] border-b border-surface-border text-typography-secondary font-medium uppercase tracking-wider text-[11px]">
               <tr>
                 <th className="py-3 px-4">Rank</th>
                 <th className="py-3 px-4">Candidate</th>
@@ -337,16 +304,11 @@ export const AdminResults = () => {
                   </td>
 
                   <td className="py-3 px-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={item.imageUrl}
-                        alt=""
-                        className="w-8 h-8 rounded-lg object-cover border border-surface-border flex-shrink-0"
-                      />
-                      <div>
-                        <p className="font-display font-semibold text-typography-primary text-sm uppercase tracking-wide">{item.displayName}</p>
-                        <p className="text-[10px] text-typography-secondary font-mono">{item.discordUsername}</p>
-                      </div>
+                    <div>
+                      <p className="font-playfair font-semibold text-typography-primary text-sm uppercase tracking-wide">
+                        {item.displayName}
+                      </p>
+                      <p className="text-[10px] text-[#D4AF57] font-mono">@{item.discordUsername?.replace(/^@/, '')}</p>
                     </div>
                   </td>
 

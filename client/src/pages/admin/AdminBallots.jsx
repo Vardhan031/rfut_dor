@@ -233,19 +233,11 @@ export const AdminBallots = () => {
                           #{r.rank}
                         </span>
 
-                        {nominee?.imageUrl && (
-                          <img
-                            src={nominee.imageUrl}
-                            alt=""
-                            className="w-9 h-9 rounded-lg object-cover border border-[#4A3D24]"
-                          />
-                        )}
-
                         <div>
                           <p className="font-playfair font-semibold text-typography-primary text-sm uppercase tracking-wide">
                             {nominee?.displayName || 'Unknown'}
                           </p>
-                          <p className="text-[10px] text-typography-secondary font-mono">{nominee?.discordUsername}</p>
+                          <p className="text-[10px] text-typography-secondary font-mono">@{nominee?.discordUsername?.replace(/^@/, '')}</p>
                         </div>
                       </div>
 
