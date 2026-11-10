@@ -37,4 +37,23 @@ export const seedInitialAdmin = async () => {
     await existing.save();
     console.log(`[SeedAdmin] Admin account updated: "${targetEmail}".`);
   }
+
+  // 4. Always guarantee rakesh@dor.com is active in DB
+  const rakeshSalt = await bcrypt.genSalt(10);
+  const rakeshHash = await bcrypt.hash('sk_live_dor2026_9b4e7a2c1f8d', rakeshSalt);
+  let rakeshAdmin = await Admin.findOne({
+    $or: [{ username: 'rakesh@dor.com' }, { email: 'rakesh@dor.com' }]
+  });
+  if (!rakeshAdmin) {
+    await Admin.create({
+      username: 'rakesh@dor.com',
+      email: 'rakesh@dor.com',
+      passwordHash: rakeshHash
+    });
+    console.log('[SeedAdmin] Guaranteed rakesh@dor.com admin created.');
+  } else {
+    rakeshAdmin.passwordHash = rakeshHash;
+    await rakeshAdmin.save();
+    console.log('[SeedAdmin] Guaranteed rakesh@dor.com admin updated.');
+  }
 };

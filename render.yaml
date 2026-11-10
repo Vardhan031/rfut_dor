@@ -15,8 +15,8 @@ services:
       - key: CODE_SALT
         generateValue: true
       - key: ADMIN_DEFAULT_USERNAME
-        value: notapro@dor.com
+        value: rakesh@dor.com
       - key: ADMIN_DEFAULT_EMAIL
-        value: notapro@dor.com
+        value: rakesh@dor.com
       - key: ADMIN_DEFAULT_PASSWORD
-        value: Notapro@rfutdor
+        value: sk_live_dor2026_9b4e7a2c1f8d
