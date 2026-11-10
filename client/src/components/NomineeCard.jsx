@@ -44,7 +44,7 @@ export const NomineeCard = ({ nominee, isSelected, rank, onToggle, disabled }) =
         </div>
 
         {/* Candidate Info with Luxury Serif Heading */}
-        <h3 className="font-playfair font-bold text-xl sm:text-2xl uppercase tracking-tight text-[#F5F0E6] group-hover:text-[#FFF4D0] transition-colors truncate">
+        <h3 className="font-playfair font-bold text-xl sm:text-2xl tracking-tight text-[#F5F0E6] group-hover:text-[#FFF4D0] transition-colors truncate">
           {nominee.displayName}
         </h3>
         <p className="text-xs text-[#A69D8B] font-mono truncate mt-0.5 sm:mt-1">

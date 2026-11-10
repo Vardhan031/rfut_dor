@@ -301,7 +301,7 @@ export const AdminNominees = () => {
                 {/* Header row: Name & Handle + Active Status Badge */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-playfair font-bold text-lg text-typography-primary uppercase tracking-wide truncate group-hover:text-[#E8C97B] transition-colors">
+                    <h3 className="font-playfair font-bold text-lg text-typography-primary tracking-wide truncate group-hover:text-[#E8C97B] transition-colors">
                       {nominee.displayName}
                     </h3>
                     <p className="text-xs text-[#D4AF57] font-mono truncate mt-0.5">

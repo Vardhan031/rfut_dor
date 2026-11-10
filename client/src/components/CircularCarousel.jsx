@@ -1017,7 +1017,7 @@ export const CircularCarousel = forwardRef((
               {/* Middle Section: Candidate Name */}
               <div className="relative z-10 flex flex-col items-center justify-center my-auto py-2 text-center w-full">
                 <div className="w-14 h-[1px] bg-[#3D3321] mb-2.5" />
-                <h3 className="font-playfair font-black text-base sm:text-xl uppercase tracking-wider text-[#FFFFFF] drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)] line-clamp-2 leading-tight px-1 max-w-full">
+                <h3 className="font-playfair font-black text-base sm:text-xl tracking-wider text-[#FFFFFF] drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)] line-clamp-2 leading-tight px-1 max-w-full">
                   {displayName}
                 </h3>
                 {cleanDiscord && (

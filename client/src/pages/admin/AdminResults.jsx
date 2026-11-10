@@ -88,7 +88,7 @@ export const AdminResults = () => {
                 2
               </div>
               <div className="pt-1">
-                <h3 className="font-playfair font-bold text-xl uppercase tracking-wide text-typography-primary">
+                <h3 className="font-playfair font-bold text-xl tracking-wide text-typography-primary">
                   {top2.displayName}
                 </h3>
                 <p className="text-xs text-[#D4AF57] font-mono mt-0.5">@{top2.discordUsername?.replace(/^@/, '')}</p>
@@ -122,7 +122,7 @@ export const AdminResults = () => {
             </div>
 
             <div className="pt-1">
-              <h2 className="font-playfair font-bold text-2xl uppercase tracking-wide text-gold">
+              <h2 className="font-playfair font-bold text-2xl tracking-wide text-gold">
                 {top1.displayName}
               </h2>
               <p className="text-xs text-[#E8C97B] font-mono mt-0.5">@{top1.discordUsername?.replace(/^@/, '')}</p>
@@ -151,7 +151,7 @@ export const AdminResults = () => {
                 3
               </div>
               <div className="pt-1">
-                <h3 className="font-playfair font-bold text-xl uppercase tracking-wide text-typography-primary">
+                <h3 className="font-playfair font-bold text-xl tracking-wide text-typography-primary">
                   {top3.displayName}
                 </h3>
                 <p className="text-xs text-[#D4AF57] font-mono mt-0.5">@{top3.discordUsername?.replace(/^@/, '')}</p>
@@ -246,7 +246,7 @@ export const AdminResults = () => {
 
                   <td className="py-3 px-4">
                     <div>
-                      <p className="font-playfair font-semibold text-typography-primary text-sm uppercase tracking-wide">
+                      <p className="font-playfair font-semibold text-typography-primary text-sm tracking-wide">
                         {item.displayName}
                       </p>
                       <p className="text-[10px] text-[#D4AF57] font-mono">@{item.discordUsername?.replace(/^@/, '')}</p>

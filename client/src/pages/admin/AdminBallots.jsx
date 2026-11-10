@@ -234,7 +234,7 @@ export const AdminBallots = () => {
                         </span>
 
                         <div>
-                          <p className="font-playfair font-semibold text-typography-primary text-sm uppercase tracking-wide">
+                          <p className="font-playfair font-semibold text-typography-primary text-sm tracking-wide">
                             {nominee?.displayName || 'Unknown'}
                           </p>
                           <p className="text-[10px] text-typography-secondary font-mono">@{nominee?.discordUsername?.replace(/^@/, '')}</p>
