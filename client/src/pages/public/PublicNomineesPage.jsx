@@ -166,11 +166,11 @@ export const PublicNomineesPage = () => {
                     </div>
 
                     {/* Main Name & Discord Handle */}
-                    <div className="mt-6 mb-2">
-                      <h3 className="font-playfair font-bold text-3xl sm:text-4xl text-[#F5F0E6] tracking-tight truncate leading-tight group-hover:text-[#FFF4D0] transition-colors">
+                    <div className="mt-5 mb-1.5">
+                      <h3 className="font-playfair font-bold text-3xl sm:text-4xl text-[#F5F0E6] tracking-tight truncate leading-normal pb-2 group-hover:text-[#FFF4D0] transition-colors">
                         {nominee.displayName}
                       </h3>
-                      <p className="text-sm font-sans text-[#A69D8B] mt-1.5 font-normal truncate">
+                      <p className="text-sm font-sans text-[#A69D8B] mt-0.5 font-normal truncate pb-1">
                         {cleanDiscordHandle}
                       </p>
                     </div>

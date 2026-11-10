@@ -87,10 +87,10 @@ export const SortableNomineeItem = ({
 
       {/* Nominee Details (Ample room for full names on mobile!) */}
       <div className="flex-1 min-w-0 pr-1">
-        <h4 className="font-playfair font-bold text-typography-primary text-sm sm:text-base tracking-wide truncate group-hover:text-gold transition-colors">
+        <h4 className="font-playfair font-bold text-typography-primary text-sm sm:text-base tracking-wide truncate group-hover:text-gold transition-colors leading-normal pb-0.5">
           {nominee.displayName}
         </h4>
-        <p className="text-[11px] sm:text-xs text-typography-secondary font-mono tracking-wider truncate">
+        <p className="text-[11px] sm:text-xs text-typography-secondary font-mono tracking-wider truncate pb-0.5">
           @{cleanDiscord}
         </p>
       </div>

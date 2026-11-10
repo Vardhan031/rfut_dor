@@ -203,7 +203,7 @@ export const ConfirmationPage = () => {
                 #{String(activeRank).padStart(2, '0')}
               </span>
               <span className="text-[#3D3321]">&bull;</span>
-              <span className="font-playfair text-sm sm:text-base font-bold text-[#F5F0E6] tracking-wide truncate max-w-[140px] sm:max-w-[220px]">
+              <span className="font-playfair text-sm sm:text-base font-bold text-[#F5F0E6] tracking-wide truncate max-w-[140px] sm:max-w-[220px] leading-normal pb-0.5">
                 {activeNominee.displayName}
               </span>
               <span className="text-[#3D3321]">&bull;</span>
@@ -280,10 +280,10 @@ export const ConfirmationPage = () => {
                     </span>
 
                     <div className="min-w-0">
-                      <p className="font-playfair font-bold text-[#F5F0E6] text-sm sm:text-base tracking-wide truncate">
+                      <p className="font-playfair font-bold text-[#F5F0E6] text-sm sm:text-base tracking-wide truncate leading-normal pb-0.5">
                         {nominee.displayName}
                       </p>
-                      <p className="text-[11px] sm:text-xs text-[#A69D8B] font-mono truncate">
+                      <p className="text-[11px] sm:text-xs text-[#A69D8B] font-mono truncate pb-0.5">
                         {nominee.discordUsername ? `@${nominee.discordUsername.toLowerCase().replace(/#\d+$/, '')}` : ''}
                       </p>
                     </div>
