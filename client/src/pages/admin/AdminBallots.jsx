@@ -1,6 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
-import { Search, Eye, X, Trash2, AlertTriangle, RefreshCw, Download, FileText } from 'lucide-react';
+import { toBlob, toPng } from 'html-to-image';
+import {
+  Search,
+  Eye,
+  X,
+  Trash2,
+  AlertTriangle,
+  RefreshCw,
+  FileText,
+  Camera,
+  Award
+} from 'lucide-react';
 import { toast } from 'sonner';
 import ThemedSelect from '../../components/ui/ThemedSelect';
 
@@ -12,6 +23,11 @@ export const AdminBallots = () => {
   const [selectedBallot, setSelectedBallot] = useState(null);
   const [ballotToDelete, setBallotToDelete] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+
+  // States for Image Capture
+  const [activeCaptureBallot, setActiveCaptureBallot] = useState(null);
+  const [capturingId, setCapturingId] = useState(null);
+  const captureCardRef = useRef(null);
 
   const fetchBallots = async () => {
     try {
@@ -50,94 +66,6 @@ export const AdminBallots = () => {
     }
   };
 
-  const escapeCsv = (val) => {
-    if (val === null || val === undefined) return '""';
-    const str = String(val).replace(/"/g, '""');
-    return `"${str}"`;
-  };
-
-  // Export all submitted ballots into a master CSV file (Admin Only)
-  const handleExportVotesCsv = () => {
-    if (!ballots || ballots.length === 0) {
-      toast.info('No submitted ballots available to export.');
-      return;
-    }
-
-    const headers = [
-      'Ballot ID',
-      'Voter Discord',
-      'Category',
-      'Submission Timestamp (UTC)',
-      'Total Points Awarded',
-      'Rank 1 Nominee',
-      'Rank 1 Discord',
-      'Rank 1 Points',
-      'Rank 2 Nominee',
-      'Rank 2 Discord',
-      'Rank 2 Points',
-      'Rank 3 Nominee',
-      'Rank 3 Discord',
-      'Rank 3 Points',
-      'Rank 4 Nominee',
-      'Rank 4 Discord',
-      'Rank 4 Points',
-      'Rank 5 Nominee',
-      'Rank 5 Discord',
-      'Rank 5 Points',
-      'Rank 6 Nominee',
-      'Rank 6 Discord',
-      'Rank 6 Points',
-      'Rank 7 Nominee',
-      'Rank 7 Discord',
-      'Rank 7 Points',
-      'Rank 8 Nominee',
-      'Rank 8 Discord',
-      'Rank 8 Points',
-      'Rank 9 Nominee',
-      'Rank 9 Discord',
-      'Rank 9 Points',
-      'Rank 10 Nominee',
-      'Rank 10 Discord',
-      'Rank 10 Points'
-    ];
-
-    const rows = ballots.map((b) => {
-      const voter = b.voterId || {};
-      const sorted = (b.rankings || []).slice().sort((x, y) => x.rank - y.rank);
-      const totalPts = sorted.reduce((sum, r) => sum + (r.points || 0), 0);
-
-      const rankCols = [];
-      for (let i = 1; i <= 10; i++) {
-        const item = sorted.find((r) => r.rank === i) || {};
-        const nom = item.nomineeId || {};
-        rankCols.push(escapeCsv(nom.displayName || ''));
-        rankCols.push(escapeCsv(nom.discordUsername ? `@${nom.discordUsername.replace(/^@/, '')}` : ''));
-        rankCols.push(escapeCsv(item.points || 0));
-      }
-
-      return [
-        escapeCsv(b._id),
-        escapeCsv(voter.discordUsername || 'Unknown'),
-        escapeCsv(voter.category || 'Member'),
-        escapeCsv(b.submittedAt ? new Date(b.submittedAt).toISOString() : ''),
-        escapeCsv(totalPts),
-        ...rankCols
-      ].join(',');
-    });
-
-    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `rfut_dor_all_votes_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    toast.success(`Exported ${ballots.length} submitted ballots to CSV.`);
-  };
-
   // Download a single ballot's formatted text receipt (Admin Only)
   const handleDownloadSingleBallotTxt = (ballot) => {
     if (!ballot) return;
@@ -157,7 +85,7 @@ export const AdminBallots = () => {
       '',
       `Ballot ID:       ${ballot._id}`,
       `Voter Discord:   ${voter.discordUsername || 'Unknown'}`,
-      `Category:        ${voter.category || 'Regular Member'}`,
+      `Category:        ${voter.category === 'Journo' ? 'Journalist' : voter.category || 'Regular Member'}`,
       `Submitted At:    ${ballot.submittedAt ? new Date(ballot.submittedAt).toUTCString() : 'N/A'}`,
       `Audit Status:    SEALED & RECORDED IN DATABASE`,
       `Total Points:    67 Points Distributed Across Top 10 Nominees`,
@@ -182,47 +110,255 @@ export const AdminBallots = () => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success('Ballot text archive downloaded.');
+    toast.success(`Ballot text receipt for ${voter.discordUsername || 'voter'} downloaded.`);
   };
 
-  // Download a single ballot's individual breakdown CSV (Admin Only)
-  const handleDownloadSingleBallotCsv = (ballot) => {
+  // Download high-resolution PNG receipt card for any voter
+  const handleDownloadBallotImage = async (ballot) => {
     if (!ballot) return;
+    const voterName = ballot.voterId?.discordUsername || 'voter';
+    setCapturingId(ballot._id);
+    setActiveCaptureBallot(ballot);
+
+    const toastId = toast.loading(`Rendering ballot image receipt for ${voterName}...`);
+
+    setTimeout(async () => {
+      try {
+        if (!captureCardRef.current) {
+          throw new Error('Capture template not initialized.');
+        }
+
+        if (document.fonts) {
+          await document.fonts.ready;
+        }
+
+        const sanitized = voterName.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const filename = `Ballot_Receipt_${sanitized}_${ballot._id.slice(-6)}.png`;
+
+        const options = {
+          pixelRatio: 2,
+          cacheBust: true,
+          skipFonts: true,
+          backgroundColor: null
+        };
+
+        let downloadUrl = '';
+        let isBlob = false;
+
+        try {
+          const blob = await toBlob(captureCardRef.current, options);
+          if (blob) {
+            downloadUrl = URL.createObjectURL(blob);
+            isBlob = true;
+          }
+        } catch (blobErr) {
+          console.warn('toBlob fallback to toPng:', blobErr);
+        }
+
+        if (!downloadUrl) {
+          downloadUrl = await toPng(captureCardRef.current, options);
+        }
+
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = downloadUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        if (isBlob) {
+          setTimeout(() => URL.revokeObjectURL(downloadUrl), 5000);
+        }
+
+        toast.success(`Ballot image for ${voterName} downloaded (PNG)!`, { id: toastId });
+      } catch (err) {
+        console.error('Failed to capture ballot card image:', err);
+        toast.error('Image capture failed. Downloading text ballot instead.', { id: toastId });
+        handleDownloadSingleBallotTxt(ballot);
+      } finally {
+        setCapturingId(null);
+        setActiveCaptureBallot(null);
+      }
+    }, 180);
+  };
+
+  // Render 480px luxury trophy ballot receipt template for off-screen image capture
+  const renderBallotCardTemplate = (ballot) => {
+    if (!ballot) return null;
     const voter = ballot.voterId || {};
+    const voterName = voter.discordUsername || 'Voter';
     const sorted = (ballot.rankings || []).slice().sort((a, b) => a.rank - b.rank);
+    const top1 = sorted[0]?.nomineeId || {};
+    const top1Pts = sorted[0]?.points || 15;
+    const top2 = sorted[1]?.nomineeId || {};
+    const top2Pts = sorted[1]?.points || 12;
+    const top3 = sorted[2]?.nomineeId || {};
+    const top3Pts = sorted[2]?.points || 10;
+    const rest = sorted.slice(3, 10);
 
-    const headers = ['Rank', 'Nominee Display Name', 'Discord Username', 'Points Awarded'];
-    const rows = sorted.map((r) => {
-      const nom = r.nomineeId || {};
-      return [
-        escapeCsv(r.rank),
-        escapeCsv(nom.displayName || 'Unknown'),
-        escapeCsv(nom.discordUsername ? `@${nom.discordUsername.replace(/^@/, '')}` : ''),
-        escapeCsv(r.points || 0)
-      ].join(',');
-    });
+    return (
+      <div
+        style={{
+          width: '480px',
+          minWidth: '480px',
+          maxWidth: '480px',
+          backgroundColor: '#0A0907',
+          color: '#F5F0E6',
+          fontFamily: "'Manrope', sans-serif"
+        }}
+        className="relative p-5 rounded-[32px] border-2 border-[#D4AF57]/60 flex flex-col gap-3 select-none text-left overflow-hidden box-border"
+      >
+        {/* Full Trophy Background Layer */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <img
+            src="/assets/receipt_trophy_bg.png"
+            alt="r/FUT d'Or Trophy Background"
+            className="w-full h-full object-cover object-top filter brightness-[0.95] contrast-[1.12]"
+            crossOrigin="anonymous"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/35 to-black/65" />
+        </div>
 
-    const meta = [
-      `"Ballot ID",${escapeCsv(ballot._id)}`,
-      `"Voter Discord",${escapeCsv(voter.discordUsername || 'Unknown')}`,
-      `"Category",${escapeCsv(voter.category || 'Member')}`,
-      `"Submitted At",${escapeCsv(ballot.submittedAt ? new Date(ballot.submittedAt).toISOString() : '')}`,
-      `"Total Points","67"`,
-      ''
-    ];
+        {/* Top Header Strip */}
+        <div className="relative z-10 flex items-center justify-between pb-1 px-1">
+          <div>
+            <span className="font-playfair font-bold text-sm tracking-wide text-[#F5F0E6] block leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+              r/FUT <span className="text-[#D4AF57]">d'Or</span>
+            </span>
+            <span className="text-[9px] font-mono text-[#E8C97B] uppercase tracking-widest block drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+              2026 CEREMONY
+            </span>
+          </div>
 
-    const csvContent = '\uFEFF' + [...meta, headers.join(','), ...rows].join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    const safeVoter = (voter.discordUsername || 'voter').replace(/[^a-zA-Z0-9_-]/g, '_');
-    link.download = `Ballot_${safeVoter}_${ballot._id.slice(-6)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    toast.success('Ballot CSV downloaded.');
+          <div className="px-2.5 py-0.5 rounded-full bg-black/40 backdrop-blur-md border border-[#D4AF57]/50 text-[9px] font-mono tracking-widest text-[#E8C97B] uppercase font-bold shadow-md whitespace-nowrap flex-shrink-0">
+            OFFICIAL BALLOT RECORD
+          </div>
+        </div>
+
+        {/* Rank #1 Choice */}
+        <div className="relative z-10 rounded-[22px] bg-black/35 backdrop-blur-md border border-[#D4AF57]/45 p-4 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+          <div className="flex items-center justify-between mb-2">
+            <span className="px-3 py-1 rounded-full font-mono text-[10px] font-bold tracking-widest uppercase bg-black/60 text-[#E8C97B] border border-[#D4AF57]/50 flex items-center gap-1.5 shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E8C97B]" />
+              APEX SELECTION • RANK #01
+            </span>
+            <span className="font-mono text-sm font-black text-[#E8C97B] bg-black/75 px-3 py-0.5 rounded-full border border-[#D4AF57]/50 shadow-md">
+              +{top1Pts} PTS
+            </span>
+          </div>
+          <div className="pt-1">
+            <h2 className="font-playfair font-bold text-2xl text-white truncate drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+              {top1.displayName || 'Nominee #1'}
+            </h2>
+            {top1.discordUsername && (
+              <p className="font-mono text-xs text-[#E8C97B] mt-0.5 truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+                @{top1.discordUsername.replace(/^@/, '')}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Podium Runners-Up (#02 & #03) */}
+        <div className="grid grid-cols-2 gap-2.5 relative z-10">
+          <div className="rounded-[20px] bg-black/35 backdrop-blur-md border border-[#D4AF57]/40 p-3 flex flex-col justify-between shadow-[0_6px_24px_rgba(0,0,0,0.5)]">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="px-2 py-0.5 rounded-full font-mono text-[9px] font-bold tracking-widest uppercase bg-black/60 text-[#E8C97B] border border-[#D4AF57]/40">
+                #02
+              </span>
+              <span className="font-mono text-xs font-bold text-[#E8C97B] bg-black/75 px-2 py-0.5 rounded-full border border-[#D4AF57]/40">
+                +{top2Pts} PTS
+              </span>
+            </div>
+            <div>
+              <h3 className="font-sans font-bold text-base text-white truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                {top2.displayName || 'Nominee #2'}
+              </h3>
+              {top2.discordUsername && (
+                <span className="font-mono text-[10px] text-[#D8CEB8] block truncate mt-0.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                  @{top2.discordUsername.replace(/^@/, '')}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-[20px] bg-black/35 backdrop-blur-md border border-[#D4AF57]/40 p-3 flex flex-col justify-between shadow-[0_6px_24px_rgba(0,0,0,0.5)]">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="px-2 py-0.5 rounded-full font-mono text-[9px] font-bold tracking-widest uppercase bg-black/60 text-[#E8C97B] border border-[#D4AF57]/40">
+                #03
+              </span>
+              <span className="font-mono text-xs font-bold text-[#E8C97B] bg-black/75 px-2 py-0.5 rounded-full border border-[#D4AF57]/40">
+                +{top3Pts} PTS
+              </span>
+            </div>
+            <div>
+              <h3 className="font-sans font-bold text-base text-white truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                {top3.displayName || 'Nominee #3'}
+              </h3>
+              {top3.discordUsername && (
+                <span className="font-mono text-[10px] text-[#D8CEB8] block truncate mt-0.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                  @{top3.discordUsername.replace(/^@/, '')}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Positions #04 through #10 */}
+        <div className="relative z-10 rounded-[20px] bg-black/35 backdrop-blur-md border border-[#D4AF57]/35 p-3 shadow-[0_6px_24px_rgba(0,0,0,0.5)]">
+          <div className="space-y-1">
+            {rest.map((r, idx) => {
+              const nom = r.nomineeId || {};
+              const rankNum = r.rank || idx + 4;
+              return (
+                <div
+                  key={rankNum}
+                  className="flex items-center justify-between py-1.5 px-2.5 rounded-xl bg-black/40 border border-[#D4AF57]/20"
+                >
+                  <div className="flex items-center gap-2 min-w-0 pr-3">
+                    <span className="w-5 text-center font-mono text-[9px] font-bold py-0.5 rounded bg-black/60 text-[#E8C97B] border border-[#D4AF57]/30 flex-shrink-0">
+                      #{String(rankNum).padStart(2, '0')}
+                    </span>
+                    <span className="font-sans font-semibold text-xs text-white truncate max-w-[210px] drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+                      {nom.displayName || `Candidate #${rankNum}`}
+                    </span>
+                    {nom.discordUsername && (
+                      <span className="font-mono text-[9px] text-[#D8CEB8] truncate hidden xs:inline drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                        @{nom.discordUsername.replace(/^@/, '')}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-mono text-[10px] font-bold text-[#E8C97B] bg-black/75 px-2.5 py-0.5 rounded-md border border-[#D4AF57]/35 flex-shrink-0 shadow-sm whitespace-nowrap leading-tight">
+                    +{r.points || 0}&nbsp;PTS
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Footer Bar */}
+        <div className="relative z-10 pt-1 pb-0.5 px-1.5 flex items-center justify-between border-t border-[#D4AF57]/30">
+          <div className="text-left">
+            <span className="font-sans font-semibold text-sm text-[#FFFDF7] block leading-tight truncate max-w-[200px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+              @{voterName}
+            </span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="w-2 h-2 rounded-full bg-[#E8C97B] shadow-[0_0_8px_rgba(232,201,123,0.9)]" />
+              <span className="font-mono text-[10px] font-bold tracking-wider text-[#E8C97B] uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] whitespace-nowrap">
+                VERIFIED BALLOT &bull; 67 PTS
+              </span>
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-black/60 backdrop-blur-md border border-[#D4AF57]/50 px-3 py-1.5 flex items-center gap-1.5 text-xs text-[#FFF3D0] shadow-sm font-medium whitespace-nowrap flex-shrink-0">
+            <Award className="w-3.5 h-3.5 text-[#D4AF57] flex-shrink-0" />
+            <span className="font-sans text-xs tracking-wide">
+              r/FUT <span className="font-playfair font-bold text-[#D4AF57]">d'Or</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const filteredBallots = ballots.filter((b) => {
@@ -237,7 +373,7 @@ export const AdminBallots = () => {
   });
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto font-sans">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border pb-6">
         <div>
@@ -246,20 +382,10 @@ export const AdminBallots = () => {
           </h1>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2.5">
           <span className="px-3 py-1.5 rounded-lg bg-surface-card border border-surface-border text-xs font-mono text-[#D4AF57]">
             {ballots.length} Sealed Ballots
           </span>
-
-          <button
-            onClick={handleExportVotesCsv}
-            disabled={ballots.length === 0}
-            className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0A0907] font-sans font-bold text-xs uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_2px_12px_rgba(212,175,87,0.25)] active:scale-95"
-            title="Download full CSV ledger of all submitted votes and rankings"
-          >
-            <Download className="w-3.5 h-3.5 text-[#0A0907]" />
-            <span>Download Votes (CSV)</span>
-          </button>
 
           <button
             onClick={fetchBallots}
@@ -300,11 +426,11 @@ export const AdminBallots = () => {
       </div>
 
       {/* Ballots Table */}
-      <div className="bg-surface-card border border-surface-border rounded-xl overflow-hidden shadow-lg">
+      <div className="rounded-2xl border border-surface-border bg-surface-card overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs font-sans">
-            <thead className="bg-[#0C0B08] border-b border-surface-border text-typography-secondary font-medium uppercase tracking-wider text-[11px]">
-              <tr>
+          <table className="w-full text-left text-xs font-sans border-collapse">
+            <thead>
+              <tr className="border-b border-surface-border bg-[#0C0B08] text-[11px] font-mono uppercase text-typography-secondary tracking-wider">
                 <th className="py-3.5 px-4">Voter Handle</th>
                 <th className="py-3.5 px-4">Category</th>
                 <th className="py-3.5 px-4">Submitted At</th>
@@ -340,8 +466,33 @@ export const AdminBallots = () => {
                         {new Date(b.submittedAt).toLocaleString()}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                          {/* 1. Download Image Receipt Button */}
                           <button
+                            type="button"
+                            onClick={() => handleDownloadBallotImage(b)}
+                            disabled={capturingId === b._id}
+                            className="px-2.5 py-1 rounded-lg bg-[#14120E] hover:bg-[#1E1A13] text-[#E8C97B] hover:text-[#FFF4D0] border border-[#554628]/60 hover:border-[#D4AF57] transition flex items-center gap-1.5 text-xs cursor-pointer shadow-sm disabled:opacity-50"
+                            title="Download official ballot image receipt (PNG)"
+                          >
+                            <Camera className="w-3.5 h-3.5 text-[#D4AF57]" />
+                            <span>{capturingId === b._id ? 'Rendering...' : 'Image'}</span>
+                          </button>
+
+                          {/* 2. Download Text Record Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadSingleBallotTxt(b)}
+                            className="px-2.5 py-1 rounded-lg bg-[#14120E] hover:bg-[#1E1A13] text-[#D8D2C4] hover:text-white border border-surface-border hover:border-[#554628] transition flex items-center gap-1.5 text-xs cursor-pointer shadow-sm"
+                            title="Download official text record (.txt)"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-[#D4AF57]" />
+                            <span>Text</span>
+                          </button>
+
+                          {/* 3. Inspect Top 10 Button */}
+                          <button
+                            type="button"
                             onClick={() => setSelectedBallot(b)}
                             className="px-2.5 py-1 rounded-lg bg-[#1A1813] hover:bg-[#25221B] text-[#D4AF57] border border-[#554628]/60 hover:border-[#D4AF57] transition flex items-center gap-1.5 text-xs cursor-pointer shadow-sm"
                             title="Inspect complete Top 10 rankings"
@@ -350,7 +501,9 @@ export const AdminBallots = () => {
                             <span>Inspect Top 10</span>
                           </button>
 
+                          {/* 4. Remove Ballot Button */}
                           <button
+                            type="button"
                             onClick={() => setBallotToDelete(b)}
                             className="px-2.5 py-1 rounded-lg bg-rose-950/20 hover:bg-rose-900/35 text-rose-400 hover:text-rose-300 border border-rose-900/40 hover:border-rose-700/60 transition flex items-center gap-1.5 text-xs cursor-pointer shadow-sm"
                             title="Invalidate ballot and deduct votes from leaderboard"
@@ -378,11 +531,12 @@ export const AdminBallots = () => {
                 <span className="text-[10px] font-mono uppercase text-[#D4AF57] tracking-widest block">
                   Ballot Inspection
                 </span>
-                <h3 className="font-playfair font-bold text-xl uppercase tracking-wide text-[#F5F0E6]">
-                  {selectedBallot.voterId?.discordUsername || 'Voter'}'s Top 10 Ballot
+                <h3 className="font-playfair font-bold text-xl text-typography-primary">
+                  {selectedBallot.voterId?.discordUsername || 'Anonymous Voter'}
                 </h3>
-                <p className="text-xs text-typography-secondary mt-0.5">
-                  Category: <strong className="text-typography-primary">{selectedBallot.voterId?.category === 'Journo' ? 'Journalist' : selectedBallot.voterId?.category}</strong> &bull; Submitted: {new Date(selectedBallot.submittedAt).toLocaleString()}
+                <p className="text-xs text-typography-muted font-mono mt-0.5">
+                  Category: <span className="text-[#D4AF57]">{selectedBallot.voterId?.category || 'Member'}</span> &bull; Submitted:{' '}
+                  {new Date(selectedBallot.submittedAt).toLocaleString()}
                 </p>
               </div>
 
@@ -437,11 +591,22 @@ export const AdminBallots = () => {
 
             <div className="p-4 border-t border-surface-border bg-[#0C0B08] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono">
               <div className="flex items-center gap-2">
-                <span className="text-typography-secondary">Total Awarded:</span>
+                <span className="text-typography-secondary">Total Points:</span>
                 <span className="font-semibold text-[#D4AF57] text-sm">67 Points Total</span>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleDownloadBallotImage(selectedBallot)}
+                  disabled={capturingId === selectedBallot._id}
+                  className="px-3 py-1.5 rounded-lg bg-[#14120E] hover:bg-[#1C1812] text-[#E8C97B] border border-[#4A3D24] text-xs font-sans transition flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50"
+                  title="Download image receipt (PNG) for this voter"
+                >
+                  <Camera className="w-3.5 h-3.5 text-[#D4AF57]" />
+                  <span>Download Image</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => handleDownloadSingleBallotTxt(selectedBallot)}
@@ -450,16 +615,6 @@ export const AdminBallots = () => {
                 >
                   <FileText className="w-3.5 h-3.5 text-[#D4AF57]" />
                   <span>Download .txt</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDownloadSingleBallotCsv(selectedBallot)}
-                  className="px-3 py-1.5 rounded-lg bg-[#14120E] hover:bg-[#1C1812] text-[#E8C97B] border border-[#4A3D24] text-xs font-sans transition flex items-center gap-1.5 cursor-pointer shadow-sm"
-                  title="Download CSV breakdown of this ballot"
-                >
-                  <Download className="w-3.5 h-3.5 text-[#D4AF57]" />
-                  <span>Download CSV</span>
                 </button>
 
                 <button
@@ -537,6 +692,25 @@ export const AdminBallots = () => {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* OFF-SCREEN CAPTURE CANVAS FOR HIGH-RES IMAGE GENERATION */}
+      {activeCaptureBallot && (
+        <div
+          style={{
+            position: 'fixed',
+            left: '-9999px',
+            top: '0',
+            width: '480px',
+            pointerEvents: 'none',
+            zIndex: -9999
+          }}
+          aria-hidden="true"
+        >
+          <div ref={captureCardRef} style={{ width: '480px' }}>
+            {renderBallotCardTemplate(activeCaptureBallot)}
           </div>
         </div>
       )}
