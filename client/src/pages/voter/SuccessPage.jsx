@@ -2,11 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVoterAuth } from '../../context/VoterAuthContext';
 import api from '../../services/api';
-import {
-  LogOut,
-  CheckCircle2,
-  Award
-} from 'lucide-react';
+import { LogOut, CheckCircle2 } from 'lucide-react';
 
 const RANK_POINTS = [15, 12, 10, 8, 7, 5, 4, 3, 2, 1];
 
@@ -50,15 +46,9 @@ export const SuccessPage = () => {
   const rawCat = voter?.category || submittedReceipt?.category || 'Regular Member';
   const voterCategory = rawCat === 'Journo' ? 'Journalist' : rawCat;
   const ballotId = submittedReceipt?.ballotId || (voter?._id ? `BALLOT-${voter._id.toString().slice(-8).toUpperCase()}` : 'OFFICIAL-BALLOT-2026');
-  const dateStr = submittedReceipt?.submittedAt
-    ? new Date(submittedReceipt.submittedAt).toUTCString()
-    : voter?.votedAt
-    ? new Date(voter.votedAt).toUTCString()
-    : new Date().toUTCString();
 
   const displayRankings = ballotRankings.length > 0 ? ballotRankings : contextRankings;
 
-  // Ensure array has 10 items for visual layout
   const normalizedRankings = Array.from({ length: 10 }).map((_, idx) => {
     const existing = displayRankings[idx];
     if (existing) {
@@ -77,204 +67,15 @@ export const SuccessPage = () => {
     };
   });
 
-
-
-  // ========================================================================
-  // PREMIUM GOLD TYPOGRAPHY CARD RECEIPT WITH VIVID TROPHY BACKGROUND
-  // ========================================================================
-  const renderCardReceipt = () => {
-    const top1 = normalizedRankings[0];
-    const top2 = normalizedRankings[1];
-    const top3 = normalizedRankings[2];
-    const rest = normalizedRankings.slice(3, 10);
-
-    return (
-      <div
-        style={{
-          width: '480px',
-          minWidth: '480px',
-          maxWidth: '480px',
-          backgroundColor: '#0A0907',
-          color: '#F5F0E6',
-          fontFamily: "'Manrope', sans-serif"
-        }}
-        className="relative p-4 sm:p-5 rounded-[28px] sm:rounded-[32px] border-2 border-[#D4AF57]/60 flex flex-col gap-3 select-none text-left overflow-hidden box-border"
-      >
-        {/* Full Trophy Background Layer */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <img
-            src="/assets/receipt_trophy_bg.png"
-            alt="r/FUT d'Or Trophy Background"
-            className="w-full h-full object-cover object-top filter brightness-[0.95] contrast-[1.12]"
-            crossOrigin="anonymous"
-          />
-          {/* Gentle Luxury Vignette: Trophy Stays Vividly Visible */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/35 to-black/65" />
-        </div>
-
-        {/* Top Header Strip */}
-        <div className="relative z-10 flex items-center justify-between pb-1 px-1">
-          <div className="flex items-center gap-2">
-            <div>
-              <span className="font-playfair font-bold text-sm tracking-wide text-[#F5F0E6] block leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-                r/FUT <span className="text-[#D4AF57]">d'Or</span>
-              </span>
-              <span className="text-[9px] font-mono text-[#E8C97B] uppercase tracking-widest block drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-                2026 CEREMONY
-              </span>
-            </div>
-          </div>
-
-          <div className="px-2.5 py-0.5 rounded-full bg-black/40 backdrop-blur-md border border-[#D4AF57]/50 text-[9px] font-mono tracking-widest text-[#E8C97B] uppercase font-bold shadow-md whitespace-nowrap flex-shrink-0">
-            BALLOT RECEIPT
-          </div>
-        </div>
-
-        {/* 1. TIER 1: APEX SELECTION (#1 CHOICE - 15 PTS) - TRANSLUCENT FROSTED GLASS */}
-        <div className="relative z-10 rounded-[22px] bg-black/35 backdrop-blur-md border border-[#D4AF57]/45 p-4 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
-          {/* Rank + Points Header */}
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-mono text-[10px] tracking-widest uppercase text-[#FFF0C8] font-black flex items-center gap-1.5 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] whitespace-nowrap">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#E8C97B] shadow-[0_0_6px_rgba(232,201,123,0.9)]" />
-              RANK #01 &bull; 1ST CHOICE SELECTION
-            </span>
-            <span className="font-mono text-[11px] font-black text-[#0A0805] bg-gradient-to-r from-[#FFF3D0] via-[#E8C97B] to-[#D4AF57] px-2.5 py-0.5 rounded-full shadow-md whitespace-nowrap flex-shrink-0 leading-tight">
-              +{top1.points} PTS
-            </span>
-          </div>
-
-          {/* Nominee Name Typography */}
-          <div className="pt-1">
-            <h2 className="font-sans font-black text-2xl sm:text-3xl text-white tracking-tight leading-tight truncate drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
-              {top1.displayName}
-            </h2>
-            {top1.discordUsername && (
-              <p className="font-mono text-xs text-[#E8C97B] mt-1 truncate drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
-                @{top1.discordUsername.toLowerCase().replace(/#\d+$/, '')}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* 2. TIER 2: PODIUM SELECTIONS (#02 & #03 - 2-COLUMN BENTO GRID - FROSTED GLASS) */}
-        <div className="relative z-10 grid grid-cols-2 gap-2.5">
-          {/* Rank #02 */}
-          <div className="rounded-[18px] bg-black/35 backdrop-blur-md border border-[#D4AF57]/40 p-3 flex flex-col justify-between shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-            <div className="flex items-center justify-between mb-1.5 gap-1">
-              <span className="font-mono text-[9px] font-bold tracking-wider uppercase text-[#E8C97B] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] whitespace-nowrap">
-                RANK #02
-              </span>
-              <span className="font-mono text-[9px] font-bold text-[#E8C97B] bg-black/60 border border-[#D4AF57]/40 px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap flex-shrink-0 leading-none">
-                +{top2.points} PTS
-              </span>
-            </div>
-            <div>
-              <h3 className="font-sans font-bold text-base text-white truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-                {top2.displayName}
-              </h3>
-              {top2.discordUsername && (
-                <span className="font-mono text-[10px] text-[#D8CEB8] block truncate mt-0.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                  @{top2.discordUsername.toLowerCase().replace(/#\d+$/, '')}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Rank #03 */}
-          <div className="rounded-[18px] bg-black/35 backdrop-blur-md border border-[#D4AF57]/40 p-3 flex flex-col justify-between shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-            <div className="flex items-center justify-between mb-1.5 gap-1">
-              <span className="font-mono text-[9px] font-bold tracking-wider uppercase text-[#C5A253] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] whitespace-nowrap">
-                RANK #03
-              </span>
-              <span className="font-mono text-[9px] font-bold text-[#C5A253] bg-black/60 border border-[#C5A253]/40 px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap flex-shrink-0 leading-none">
-                +{top3.points} PTS
-              </span>
-            </div>
-            <div>
-              <h3 className="font-sans font-bold text-base text-white truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-                {top3.displayName}
-              </h3>
-              {top3.discordUsername && (
-                <span className="font-mono text-[10px] text-[#D8CEB8] block truncate mt-0.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                  @{top3.discordUsername.toLowerCase().replace(/#\d+$/, '')}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* 3. TIER 3: POSITIONS #04 THROUGH #10 (FROSTED GLASS ROSTER PANEL) */}
-        <div className="relative z-10 rounded-[20px] bg-black/35 backdrop-blur-md border border-[#D4AF57]/35 p-3 shadow-[0_6px_24px_rgba(0,0,0,0.5)]">
-          <div className="space-y-1">
-            {rest.map((nom) => (
-              <div
-                key={nom.rank}
-                className="flex items-center justify-between py-1.5 px-2.5 rounded-xl bg-black/40 hover:bg-black/60 border border-[#D4AF57]/20 transition-colors"
-              >
-                <div className="flex items-center gap-2 min-w-0 pr-3">
-                  <span className="w-5 text-center font-mono text-[9px] font-bold py-0.5 rounded bg-black/60 text-[#E8C97B] border border-[#D4AF57]/30 flex-shrink-0">
-                    #{String(nom.rank).padStart(2, '0')}
-                  </span>
-                  <span className="font-sans font-semibold text-xs text-white truncate max-w-[190px] drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
-                    {nom.displayName}
-                  </span>
-                  {nom.discordUsername && (
-                    <span className="font-mono text-[9px] text-[#D8CEB8] truncate hidden xs:inline drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                      @{nom.discordUsername.toLowerCase().replace(/#\d+$/, '')}
-                    </span>
-                  )}
-                </div>
-
-                {/* Guaranteed Single-Line Pill with whitespace-nowrap */}
-                <span className="font-mono text-[10px] font-bold text-[#E8C97B] bg-black/75 px-2.5 py-0.5 rounded-md border border-[#D4AF57]/35 flex-shrink-0 shadow-sm whitespace-nowrap leading-tight">
-                  +{nom.points}&nbsp;PTS
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 4. FOOTER BAR */}
-        <div className="relative z-10 pt-1 pb-0.5 px-1.5 flex items-center justify-between border-t border-[#D4AF57]/30">
-          <div className="text-left">
-            <span className="font-sans font-semibold text-sm text-[#FFFDF7] block leading-tight truncate max-w-[200px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-              @{voterName}
-            </span>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="w-2 h-2 rounded-full bg-[#E8C97B] shadow-[0_0_8px_rgba(232,201,123,0.9)]" />
-              <span className="font-mono text-[10px] font-bold tracking-wider text-[#E8C97B] uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] whitespace-nowrap">
-                VERIFIED
-              </span>
-            </div>
-          </div>
-
-          {/* Clean Pill Button matching reference footer without duplicate d'Or */}
-          <div className="rounded-xl bg-black/60 backdrop-blur-md border border-[#D4AF57]/50 px-3 py-1.5 flex items-center gap-1.5 text-xs text-[#FFF3D0] shadow-sm font-medium whitespace-nowrap flex-shrink-0">
-            <Award className="w-3.5 h-3.5 text-[#D4AF57] flex-shrink-0" />
-            <span className="font-sans text-xs tracking-wide">
-              r/FUT <span className="font-playfair font-bold text-[#D4AF57]">d'Or</span>
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <div className="flex-1 min-h-screen flex flex-col relative text-[#F5F0E6]">
-      {/* 1. Fixed Ceremony Background Layer */}
-      <div
-        className="fixed inset-0 bg-no-repeat bg-cover bg-[position:85%_center] md:bg-right-center pointer-events-none z-0"
-        style={{
-          backgroundImage: `url('/assets/rfut_dor_bg.jpg')`,
-        }}
-      >
-        <div className="absolute inset-y-0 left-0 w-full lg:w-3/5 bg-gradient-to-r from-[#0A0907] via-[#0A0907]/90 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0907]/30 via-transparent to-[#0A0907]/95" />
+    <div className="flex-1 min-h-screen flex flex-col relative text-[#F5F0E6] bg-[#0A0907]">
+      {/* Background Ambience Layer */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 bg-radial from-[#1A1610]/40 via-transparent to-[#0A0907]" />
       </div>
 
-      {/* 2. Main Content Container */}
-      <div className="relative z-10 max-w-xl w-full mx-auto px-3.5 sm:px-6 pt-20 sm:pt-28 pb-16 flex flex-col items-center space-y-6 text-center">
+      {/* Main Content Container */}
+      <div className="relative z-10 max-w-xl w-full mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-16 flex flex-col items-center space-y-6 text-center">
         {/* Header Kicker */}
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#554628] bg-[#16130E] text-[#D4AF57] text-[10px] font-mono tracking-[0.25em] uppercase mb-3 shadow-md">
@@ -289,21 +90,81 @@ export const SuccessPage = () => {
           </p>
         </div>
 
-        {/* ============================================================== */}
-        {/* INTERACTIVE CARD RECEIPT PREVIEW CONTAINER                     */}
-        {/* ============================================================== */}
-        <div className="w-full flex flex-col items-center justify-center rounded-3xl bg-[#0C0B08]/95 border border-[#3A2F18] p-3 sm:p-5 shadow-2xl backdrop-blur-md overflow-hidden">
-          {/* Clean preview without redundant subheader */}
-          <div className="w-full overflow-x-auto flex justify-center py-2">
-            <div className="scale-[0.72] xs:scale-[0.8] sm:scale-[0.9] md:scale-100 origin-top transition-all duration-300">
-              {renderCardReceipt()}
+        {/* Sealed Ballot Breakdown (Clean Typography Ledger, Zero Images) */}
+        <div className="w-full rounded-2xl bg-[#12100C]/95 border border-[#3D3321] p-4 sm:p-6 shadow-2xl backdrop-blur-md text-left">
+          {/* Metadata Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-[#2A2316] gap-2 text-xs">
+            <div>
+              <span className="text-[#706859] text-[10px] block font-mono uppercase tracking-wider">Voter Record</span>
+              <span className="font-sans font-bold text-sm text-[#F5F0E6]">@{voterName}</span>
+              <span className="text-[11px] font-mono text-[#D4AF57] ml-2">({voterCategory})</span>
             </div>
+
+            <div className="sm:text-right font-mono text-[11px]">
+              <span className="text-[#706859] text-[10px] block uppercase tracking-wider">Ballot ID</span>
+              <span className="text-[#E8C97B] font-semibold">{ballotId}</span>
+            </div>
+          </div>
+
+          {/* Top 10 Ranked List */}
+          <div className="divide-y divide-[#2A2316] mt-2">
+            {normalizedRankings.map((nom, idx) => {
+              const rank = nom.rank || idx + 1;
+              const points = nom.points || RANK_POINTS[idx];
+              const isTop3 = rank <= 3;
+
+              return (
+                <div
+                  key={nom._id || idx}
+                  className="py-2.5 px-2 sm:px-3 rounded-lg flex items-center justify-between gap-3 sm:gap-4 hover:bg-[#1A1610]/60 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span
+                      className={`font-mono text-xs font-bold w-8 sm:w-9 text-center py-1 rounded flex-shrink-0 ${
+                        isTop3
+                          ? 'bg-[#D4AF57]/20 text-[#E8C97B] border border-[#D4AF57]/40'
+                          : 'text-[#A69D8B] bg-[#1A1610] border border-[#3D3321]'
+                      }`}
+                    >
+                      #{String(rank).padStart(2, '0')}
+                    </span>
+
+                    <div className="min-w-0">
+                      <p className="font-playfair font-bold lining-nums text-[#F5F0E6] text-sm sm:text-base tracking-wide truncate leading-normal pb-0.5">
+                        {nom.displayName}
+                      </p>
+                      {nom.discordUsername && (
+                        <p className="text-[11px] sm:text-xs text-[#A69D8B] font-mono truncate pb-0.5">
+                          @{nom.discordUsername.toLowerCase().replace(/^@/, '').replace(/#\d+$/, '')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="text-right flex-shrink-0 font-mono">
+                    <span
+                      className={`text-xs font-bold px-2.5 py-1 rounded ${
+                        isTop3
+                          ? 'bg-[#D4AF57]/20 text-[#E8C97B] border border-[#D4AF57]/40 shadow-sm'
+                          : 'text-[#D8D2C4] bg-[#181510] border border-[#3D3321]'
+                      }`}
+                    >
+                      +{points} pts
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Ledger Footer */}
+          <div className="mt-4 pt-3.5 border-t border-[#2A2316] flex items-center justify-between text-xs font-mono">
+            <span className="text-[#A69D8B]">Status: <strong className="text-emerald-400 font-semibold">Sealed & Recorded</strong></span>
+            <span className="text-[#E8C97B] font-bold">67 Points Total</span>
           </div>
         </div>
 
-        {/* ============================================================== */}
-        {/* PRIMARY ACTION: EXIT CEREMONY                                  */}
-        {/* ============================================================== */}
+        {/* Primary Action: Exit Ceremony */}
         <div className="w-full space-y-3 pt-2">
           <button
             type="button"
