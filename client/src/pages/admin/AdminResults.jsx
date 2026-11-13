@@ -4,7 +4,8 @@ import {
   Trophy,
   Radio,
   Crown,
-  RefreshCw
+  RefreshCw,
+  Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -35,6 +36,53 @@ export const AdminResults = () => {
     toast.info('Feature coming soon: Official winner announcement will be unlocked during the live ceremony.');
   };
 
+  const escapeCsv = (val) => {
+    if (val === null || val === undefined) return '""';
+    const str = String(val).replace(/"/g, '""');
+    return `"${str}"`;
+  };
+
+  // Export full standings & points tally to CSV (Admin Only)
+  const handleExportResultsCsv = () => {
+    const list = data?.leaderboard || [];
+    if (!list || list.length === 0) {
+      toast.info('No results to export yet.');
+      return;
+    }
+
+    const headers = [
+      'Rank',
+      'Nominee Display Name',
+      'Discord Username',
+      'Total Points',
+      '1st Place Votes',
+      'Top 10 Appearances',
+      'Shortlist Status'
+    ];
+
+    const rows = list.map((item, idx) => [
+      escapeCsv(idx + 1),
+      escapeCsv(item.displayName || ''),
+      escapeCsv(item.discordUsername ? `@${item.discordUsername.replace(/^@/, '')}` : ''),
+      escapeCsv(item.totalPoints || 0),
+      escapeCsv(item.firstPlaceVotes || 0),
+      escapeCsv(item.top10Appearances || 0),
+      escapeCsv(item.isActive ? 'Active' : 'Inactive')
+    ].join(','));
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `rfut_dor_standings_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success('Official standings and vote tallies exported to CSV.');
+  };
+
   if (loading && !data) {
     return (
       <div className="py-24 flex flex-col items-center justify-center text-typography-secondary space-y-3 font-sans">
@@ -60,6 +108,16 @@ export const AdminResults = () => {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={handleExportResultsCsv}
+            disabled={!leaderboard || leaderboard.length === 0}
+            className="px-3.5 py-2 rounded-xl border border-[#4A3D24] bg-surface-card hover:bg-surface-hover text-[#E8C97B] hover:text-[#FFF4D0] font-sans font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition duration-200 cursor-pointer shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Download official leaderboard and vote totals into CSV"
+          >
+            <Download className="w-4 h-4 text-[#D4AF57]" />
+            <span>Download Standings (CSV)</span>
+          </button>
+
           <button
             onClick={fetchResults}
             className="p-2.5 rounded-xl border border-surface-border bg-surface-card hover:bg-surface-hover text-typography-secondary hover:text-typography-primary transition cursor-pointer active:scale-95 shadow-sm"

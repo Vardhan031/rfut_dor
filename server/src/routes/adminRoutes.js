@@ -15,6 +15,7 @@ router.get('/overview', adminController.getOverview);
 router.get('/results', adminController.getResults);
 router.post('/controls', adminController.updateControl);
 router.get('/ballots', adminController.getBallots);
+router.get('/ballots/export', adminController.exportBallotsCsv);
 router.delete('/ballots/:id', adminController.removeBallot);
 
 // Voter & code management endpoints

@@ -70,6 +70,18 @@ export const getBallots = async (req, res, next) => {
   }
 };
 
+export const exportBallotsCsv = async (req, res, next) => {
+  try {
+    const ballots = await ballotService.getAllBallotsForAdmin();
+    res.json({
+      success: true,
+      data: ballots
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const removeBallot = async (req, res, next) => {
   try {
     const { id } = req.params;

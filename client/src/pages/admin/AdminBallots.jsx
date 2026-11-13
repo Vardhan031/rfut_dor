@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { Search, Eye, X, Trash2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Search, Eye, X, Trash2, AlertTriangle, RefreshCw, Download, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import ThemedSelect from '../../components/ui/ThemedSelect';
 
@@ -50,6 +50,181 @@ export const AdminBallots = () => {
     }
   };
 
+  const escapeCsv = (val) => {
+    if (val === null || val === undefined) return '""';
+    const str = String(val).replace(/"/g, '""');
+    return `"${str}"`;
+  };
+
+  // Export all submitted ballots into a master CSV file (Admin Only)
+  const handleExportVotesCsv = () => {
+    if (!ballots || ballots.length === 0) {
+      toast.info('No submitted ballots available to export.');
+      return;
+    }
+
+    const headers = [
+      'Ballot ID',
+      'Voter Discord',
+      'Category',
+      'Submission Timestamp (UTC)',
+      'Total Points Awarded',
+      'Rank 1 Nominee',
+      'Rank 1 Discord',
+      'Rank 1 Points',
+      'Rank 2 Nominee',
+      'Rank 2 Discord',
+      'Rank 2 Points',
+      'Rank 3 Nominee',
+      'Rank 3 Discord',
+      'Rank 3 Points',
+      'Rank 4 Nominee',
+      'Rank 4 Discord',
+      'Rank 4 Points',
+      'Rank 5 Nominee',
+      'Rank 5 Discord',
+      'Rank 5 Points',
+      'Rank 6 Nominee',
+      'Rank 6 Discord',
+      'Rank 6 Points',
+      'Rank 7 Nominee',
+      'Rank 7 Discord',
+      'Rank 7 Points',
+      'Rank 8 Nominee',
+      'Rank 8 Discord',
+      'Rank 8 Points',
+      'Rank 9 Nominee',
+      'Rank 9 Discord',
+      'Rank 9 Points',
+      'Rank 10 Nominee',
+      'Rank 10 Discord',
+      'Rank 10 Points'
+    ];
+
+    const rows = ballots.map((b) => {
+      const voter = b.voterId || {};
+      const sorted = (b.rankings || []).slice().sort((x, y) => x.rank - y.rank);
+      const totalPts = sorted.reduce((sum, r) => sum + (r.points || 0), 0);
+
+      const rankCols = [];
+      for (let i = 1; i <= 10; i++) {
+        const item = sorted.find((r) => r.rank === i) || {};
+        const nom = item.nomineeId || {};
+        rankCols.push(escapeCsv(nom.displayName || ''));
+        rankCols.push(escapeCsv(nom.discordUsername ? `@${nom.discordUsername.replace(/^@/, '')}` : ''));
+        rankCols.push(escapeCsv(item.points || 0));
+      }
+
+      return [
+        escapeCsv(b._id),
+        escapeCsv(voter.discordUsername || 'Unknown'),
+        escapeCsv(voter.category || 'Member'),
+        escapeCsv(b.submittedAt ? new Date(b.submittedAt).toISOString() : ''),
+        escapeCsv(totalPts),
+        ...rankCols
+      ].join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `rfut_dor_all_votes_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${ballots.length} submitted ballots to CSV.`);
+  };
+
+  // Download a single ballot's formatted text receipt (Admin Only)
+  const handleDownloadSingleBallotTxt = (ballot) => {
+    if (!ballot) return;
+    const voter = ballot.voterId || {};
+    const sorted = (ballot.rankings || []).slice().sort((a, b) => a.rank - b.rank);
+    const rows = sorted.map((r) => {
+      const nom = r.nomineeId || {};
+      const name = nom.displayName || 'Unknown';
+      const handle = nom.discordUsername ? `(@${nom.discordUsername.replace(/^@/, '')})` : '';
+      return `RANK #${String(r.rank).padStart(2, '0')}:  ${name.padEnd(24)} ${handle.padEnd(20)} [+${r.points} PTS]`;
+    });
+
+    const fileContent = [
+      '================================================================================',
+      "               r/FUT d'Or 2026 • OFFICIAL AUDITED BALLOT ARCHIVE",
+      '================================================================================',
+      '',
+      `Ballot ID:       ${ballot._id}`,
+      `Voter Discord:   ${voter.discordUsername || 'Unknown'}`,
+      `Category:        ${voter.category || 'Regular Member'}`,
+      `Submitted At:    ${ballot.submittedAt ? new Date(ballot.submittedAt).toUTCString() : 'N/A'}`,
+      `Audit Status:    SEALED & RECORDED IN DATABASE`,
+      `Total Points:    67 Points Distributed Across Top 10 Nominees`,
+      '',
+      '--------------------------------------------------------------------------------',
+      '                        VERIFIED TOP 10 NOMINEE RANKINGS',
+      '--------------------------------------------------------------------------------',
+      ...rows,
+      '',
+      '================================================================================',
+      "   r/FUT d'Or 2026 • Admin Oversight Archive • Confidential Ballot Record",
+      '================================================================================'
+    ].join('\n');
+
+    const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const safeVoter = (voter.discordUsername || 'voter').replace(/[^a-zA-Z0-9_-]/g, '_');
+    link.download = `Ballot_${safeVoter}_${ballot._id.slice(-6)}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success('Ballot text archive downloaded.');
+  };
+
+  // Download a single ballot's individual breakdown CSV (Admin Only)
+  const handleDownloadSingleBallotCsv = (ballot) => {
+    if (!ballot) return;
+    const voter = ballot.voterId || {};
+    const sorted = (ballot.rankings || []).slice().sort((a, b) => a.rank - b.rank);
+
+    const headers = ['Rank', 'Nominee Display Name', 'Discord Username', 'Points Awarded'];
+    const rows = sorted.map((r) => {
+      const nom = r.nomineeId || {};
+      return [
+        escapeCsv(r.rank),
+        escapeCsv(nom.displayName || 'Unknown'),
+        escapeCsv(nom.discordUsername ? `@${nom.discordUsername.replace(/^@/, '')}` : ''),
+        escapeCsv(r.points || 0)
+      ].join(',');
+    });
+
+    const meta = [
+      `"Ballot ID",${escapeCsv(ballot._id)}`,
+      `"Voter Discord",${escapeCsv(voter.discordUsername || 'Unknown')}`,
+      `"Category",${escapeCsv(voter.category || 'Member')}`,
+      `"Submitted At",${escapeCsv(ballot.submittedAt ? new Date(ballot.submittedAt).toISOString() : '')}`,
+      `"Total Points","67"`,
+      ''
+    ];
+
+    const csvContent = '\uFEFF' + [...meta, headers.join(','), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const safeVoter = (voter.discordUsername || 'voter').replace(/[^a-zA-Z0-9_-]/g, '_');
+    link.download = `Ballot_${safeVoter}_${ballot._id.slice(-6)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success('Ballot CSV downloaded.');
+  };
+
   const filteredBallots = ballots.filter((b) => {
     const term = search.toLowerCase().trim();
     const voter = b.voterId;
@@ -71,10 +246,21 @@ export const AdminBallots = () => {
           </h1>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <span className="px-3 py-1.5 rounded-lg bg-surface-card border border-surface-border text-xs font-mono text-[#D4AF57]">
             {ballots.length} Sealed Ballots
           </span>
+
+          <button
+            onClick={handleExportVotesCsv}
+            disabled={ballots.length === 0}
+            className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0A0907] font-sans font-bold text-xs uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_2px_12px_rgba(212,175,87,0.25)] active:scale-95"
+            title="Download full CSV ledger of all submitted votes and rankings"
+          >
+            <Download className="w-3.5 h-3.5 text-[#0A0907]" />
+            <span>Download Votes (CSV)</span>
+          </button>
+
           <button
             onClick={fetchBallots}
             className="px-3 py-1.5 rounded-lg border border-surface-border hover:bg-surface-card text-xs font-sans text-typography-secondary hover:text-typography-primary transition flex items-center gap-1 cursor-pointer"
@@ -249,23 +435,45 @@ export const AdminBallots = () => {
                 })}
             </div>
 
-            <div className="p-4 border-t border-surface-border bg-[#0C0B08] flex items-center justify-between text-xs font-mono">
-              <div>
-                <span className="text-typography-secondary mr-2">Total Points Awarded:</span>
+            <div className="p-4 border-t border-surface-border bg-[#0C0B08] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono">
+              <div className="flex items-center gap-2">
+                <span className="text-typography-secondary">Total Awarded:</span>
                 <span className="font-semibold text-[#D4AF57] text-sm">67 Points Total</span>
               </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  const b = selectedBallot;
-                  setBallotToDelete(b);
-                }}
-                className="px-3 py-1.5 rounded-lg bg-rose-950/25 hover:bg-rose-900/40 text-rose-400 hover:text-rose-300 border border-rose-900/50 text-xs font-sans transition flex items-center gap-1.5 cursor-pointer"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Invalidate & Remove Ballot</span>
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleDownloadSingleBallotTxt(selectedBallot)}
+                  className="px-3 py-1.5 rounded-lg bg-[#14120E] hover:bg-[#1C1812] text-[#E8C97B] border border-[#4A3D24] text-xs font-sans transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  title="Download formatted text receipt for this voter"
+                >
+                  <FileText className="w-3.5 h-3.5 text-[#D4AF57]" />
+                  <span>Download .txt</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDownloadSingleBallotCsv(selectedBallot)}
+                  className="px-3 py-1.5 rounded-lg bg-[#14120E] hover:bg-[#1C1812] text-[#E8C97B] border border-[#4A3D24] text-xs font-sans transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  title="Download CSV breakdown of this ballot"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#D4AF57]" />
+                  <span>Download CSV</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const b = selectedBallot;
+                    setBallotToDelete(b);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-rose-950/25 hover:bg-rose-900/40 text-rose-400 hover:text-rose-300 border border-rose-900/50 text-xs font-sans transition flex items-center gap-1.5 cursor-pointer ml-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Invalidate Ballot</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -1,17 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVoterAuth } from '../../context/VoterAuthContext';
 import api from '../../services/api';
-import { toBlob, toPng } from 'html-to-image';
 import {
   LogOut,
   CheckCircle2,
-  Download,
-  Sparkles,
-  FileText,
   Award
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 const RANK_POINTS = [15, 12, 10, 8, 7, 5, 4, 3, 2, 1];
 
@@ -20,10 +15,6 @@ export const SuccessPage = () => {
   const navigate = useNavigate();
 
   const [ballotRankings, setBallotRankings] = useState(contextRankings || []);
-  const [generatingImage, setGeneratingImage] = useState(false);
-
-  // Dedicated off-screen reference for 2x retina DOM-to-image capture
-  const exportCardRef = useRef(null);
 
   // If rankings not in context, fetch from backend endpoint
   useEffect(() => {
@@ -86,114 +77,7 @@ export const SuccessPage = () => {
     };
   });
 
-  // Client-Side DOM-to-Image Generation (html-to-image at 2x Retina DPI)
-  const handleDownloadImageReceipt = async () => {
-    if (!exportCardRef.current) {
-      toast.error('Receipt canvas not initialized. Please try again.');
-      return;
-    }
 
-    setGeneratingImage(true);
-    const toastId = toast.loading('Rendering high-resolution ballot card receipt...');
-
-    try {
-      if (document.fonts) {
-        await document.fonts.ready;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
-      const sanitizedName = voterName.replace(/[^a-zA-Z0-9_-]/g, '_');
-      const filename = `rFUT_dOr_2026_Ballot_Receipt_${sanitizedName}.png`;
-
-      // Transparent canvas with no clipped outer black shadows
-      const options = {
-        pixelRatio: 2,
-        cacheBust: true,
-        skipFonts: true,
-        backgroundColor: null
-      };
-
-      let downloadUrl = '';
-      let isBlob = false;
-
-      try {
-        const blob = await toBlob(exportCardRef.current, options);
-        if (blob) {
-          downloadUrl = URL.createObjectURL(blob);
-          isBlob = true;
-        }
-      } catch (blobErr) {
-        console.warn('toBlob fallback to toPng:', blobErr);
-      }
-
-      if (!downloadUrl) {
-        downloadUrl = await toPng(exportCardRef.current, options);
-      }
-
-      const link = document.createElement('a');
-      link.download = filename;
-      link.href = downloadUrl;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      if (isBlob) {
-        setTimeout(() => URL.revokeObjectURL(downloadUrl), 5000);
-      }
-
-      toast.success('Ballot card receipt downloaded (PNG)!', { id: toastId });
-    } catch (err) {
-      console.error('Failed to generate PNG receipt:', err);
-      toast.error('Image capture failed. Downloading text ballot instead.', { id: toastId });
-      handleDownloadTextBallot();
-    } finally {
-      setGeneratingImage(false);
-    }
-  };
-
-  // Text Ballot (.txt) Fallback
-  const handleDownloadTextBallot = () => {
-    const rows = normalizedRankings.map((nom, idx) => {
-      const rankNum = nom.rank || idx + 1;
-      const pts = nom.points || RANK_POINTS[idx];
-      const name = nom.displayName;
-      const handle = nom.discordUsername ? `(@${nom.discordUsername.toLowerCase().replace(/#\d+$/, '')})` : '';
-      return `RANK #${String(rankNum).padStart(2, '0')}:  ${name.padEnd(20)} ${handle.padEnd(18)} [${pts > 0 ? `+${pts}` : pts} PTS]`;
-    });
-
-    const fileContent = [
-      '================================================================================',
-      "                    r/FUT d'Or 2026 • OFFICIAL BALLOT RECEIPT",
-      '================================================================================',
-      '',
-      `Ballot ID:       ${ballotId}`,
-      `Voter Discord:   ${voterName}`,
-      `Category:        ${voterCategory}`,
-      `Status:          PERMANENTLY SEALED & CRYPTOGRAPHICALLY RECORDED`,
-      `Submission Date: ${dateStr}`,
-      `Total Points:    67 Points Distributed Across Top 10 Nominees`,
-      '',
-      '--------------------------------------------------------------------------------',
-      '                         OFFICIAL TOP 10 BALLOT RANKINGS',
-      '--------------------------------------------------------------------------------',
-      ...rows,
-      '',
-      '================================================================================',
-      "  r/FUT d'Or 2026 • Official Community Awards • All Rights Reserved",
-      '================================================================================'
-    ].join('\n');
-
-    const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `rFUT_dOr_2026_Ballot_${voterName.replace(/[^a-zA-Z0-9_-]/g, '_')}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    toast.success('Ballot text receipt downloaded!');
-  };
 
   // ========================================================================
   // PREMIUM GOLD TYPOGRAPHY CARD RECEIPT WITH VIVID TROPHY BACKGROUND
@@ -401,7 +285,7 @@ export const SuccessPage = () => {
             Ballot Submitted
           </h1>
           <p className="mt-2 text-[#A69D8B] text-xs sm:text-sm font-sans max-w-md mx-auto leading-relaxed px-2">
-            Your Top 10 rankings for <strong className="text-[#E8C97B] font-semibold">r/FUT d'Or 2026</strong> are sealed. Download your official card receipt below!
+            Your Top 10 rankings for <strong className="text-[#E8C97B] font-semibold">r/FUT d'Or 2026</strong> have been officially recorded and permanently sealed.
           </p>
         </div>
 
@@ -418,49 +302,17 @@ export const SuccessPage = () => {
         </div>
 
         {/* ============================================================== */}
-        {/* PRIMARY ACTION BUTTONS                                         */}
+        {/* PRIMARY ACTION: EXIT CEREMONY                                  */}
         {/* ============================================================== */}
         <div className="w-full space-y-3 pt-2">
-          {/* Main Download Button */}
           <button
             type="button"
-            onClick={handleDownloadImageReceipt}
-            disabled={generatingImage}
-            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0C0C0B] font-sans font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all shadow-[0_0_30px_rgba(212,175,87,0.4)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            onClick={handleExit}
+            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-[#D4AF57] via-[#E8C97B] to-[#D4AF57] hover:brightness-110 text-[#0C0C0B] font-sans font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all shadow-[0_0_25px_rgba(212,175,87,0.3)] cursor-pointer active:scale-[0.99]"
           >
-            {generatingImage ? (
-              <>
-                <Sparkles className="w-5 h-5 animate-spin text-[#0C0C0B]" />
-                <span>Generating Ballot Card Receipt...</span>
-              </>
-            ) : (
-              <>
-                <Download className="w-5 h-5 text-[#0C0C0B]" />
-                <span>Download Card Receipt (PNG)</span>
-              </>
-            )}
+            <LogOut className="w-4 h-4 text-[#0C0C0B]" />
+            <span>Exit Ceremony</span>
           </button>
-
-          {/* Secondary Controls: Download Text & Exit */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={handleDownloadTextBallot}
-              className="w-full sm:w-auto flex-1 px-4 py-3 rounded-xl border border-[#3D3321] hover:border-[#D4AF57] text-[#A69D8B] hover:text-[#F5F0E6] bg-[#12100C]/80 text-xs font-sans uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
-            >
-              <FileText className="w-4 h-4 text-[#D4AF57]" />
-              <span>Download Text (.txt)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleExit}
-              className="w-full sm:w-auto px-6 py-3 rounded-xl border border-[#554628] hover:border-rose-400 text-[#A69D8B] hover:text-rose-200 bg-[#14120E] text-xs font-sans uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
-            >
-              <LogOut className="w-4 h-4 text-rose-400" />
-              <span>Exit Ceremony</span>
-            </button>
-          </div>
         </div>
 
         {/* Ceremony Protocol Notice */}
@@ -468,25 +320,6 @@ export const SuccessPage = () => {
           <p>
             <strong className="text-[#F5F0E6] font-medium">Ceremony Protocol:</strong> The winner and final standings remain strictly confidential until the official gala announcement.
           </p>
-        </div>
-      </div>
-
-      {/* ============================================================== */}
-      {/* 3. DEDICATED OFF-SCREEN EXPORT CANVAS (Pure 480px unscaled)     */}
-      {/* ============================================================== */}
-      <div
-        style={{
-          position: 'fixed',
-          left: '-9999px',
-          top: '0',
-          width: '480px',
-          pointerEvents: 'none',
-          zIndex: -9999
-        }}
-        aria-hidden="true"
-      >
-        <div ref={exportCardRef} style={{ width: '480px' }}>
-          {renderCardReceipt()}
         </div>
       </div>
     </div>
