@@ -11,6 +11,7 @@
     "build:client": "npm install --prefix client && npm run build --prefix client",
     "seed": "cd server && npm run seed",
     "test:api": "cd server && npm run test:api",
-    "test:e2e": "cd server && npm run test:e2e"
+    "test:e2e": "cd server && npm run test:e2e",
+    "ping": "node scripts/ping.js"
   }
 }

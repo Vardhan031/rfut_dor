@@ -55,8 +55,17 @@ if (process.env.NODE_ENV !== 'test') {
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
+// Lightweight keep-alive endpoints
+app.get('/ping', (req, res) => {
+  res.status(200).send('pong');
+});
+
 // General rate limiter on API
 app.use('/api', generalLimiter);
+
+app.get('/api/ping', (req, res) => {
+  res.status(200).json({ status: 'alive', time: new Date().toISOString() });
+});
 
 // Health & public platform status check
 app.get('/api/health', async (req, res) => {

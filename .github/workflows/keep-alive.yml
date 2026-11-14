@@ -1,0 +1,45 @@
+name: Keep-Alive Cron
+
+on:
+  schedule:
+    # Runs every 10 minutes to prevent free hosting (Render) from spinning down after 15m of inactivity
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'Custom URL to ping (leave blank to use LIVE_SITE_URL or default)'
+        required: false
+        default: ''
+
+jobs:
+  ping:
+    name: Ping Service
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Keep-Alive Endpoints
+        run: |
+          # Priority: Manual input -> GitHub Secret/Variable -> Render default
+          URL="${{ github.event.inputs.target_url || secrets.LIVE_SITE_URL || vars.LIVE_SITE_URL || 'https://rfut-dor.onrender.com' }}"
+          URL="${URL%/}"
+          
+          echo "Target Host: $URL"
+          echo "Timestamp: $(date -u)"
+
+          # 1. Ping /api/health (Tests Express + DB connectivity)
+          echo "==> Pinging $URL/api/health..."
+          STATUS=$(curl -s -L -m 45 -o /tmp/health_res.txt -w "%{http_code}" "$URL/api/health" || true)
+          echo "HTTP Status: $STATUS"
+          cat /tmp/health_res.txt || true
+          echo ""
+
+          # 2. Ping /ping (Lightweight fast pong check)
+          echo "==> Pinging $URL/ping..."
+          PING_STATUS=$(curl -s -L -m 30 -w "%{http_code}" "$URL/ping" || true)
+          echo "Ping Status: $PING_STATUS"
+
+          if [ "$STATUS" = "200" ] || [ "$PING_STATUS" = "200" ]; then
+            echo "✅ Keep-alive successful: Server is warm and active."
+          else
+            echo "⚠️ Non-200 response received. Performing backup retry on root URL..."
+            curl -s -L -m 30 -I "$URL/" || true
+          fi
